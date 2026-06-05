@@ -1,0 +1,813 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DreamCard Style Comparison</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;700;900&family=Space+Grotesk:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --void:    #000005;
+    --gold:    #FFD700;
+    --alive:   #00FFD1;
+    --fading:  #FF1F5A;
+    --plasma:  #FF00AA;
+    --purple:  #BF5FFF;
+    --text:    #F0F0FF;
+    --text-2:  #7A7A9A;
+    --text-3:  #3A3A5A;
+    --font-display: 'Unbounded', sans-serif;
+    --font-body:    'Space Grotesk', sans-serif;
+    --font-mono:    'Space Mono', monospace;
+  }
+
+  body {
+    background: #000005;
+    color: #F0F0FF;
+    font-family: var(--font-body);
+    min-height: 100vh;
+    padding: 40px 24px;
+  }
+
+  .page-title {
+    text-align: center;
+    margin-bottom: 10px;
+    font-family: var(--font-mono);
+    font-size: 0.65rem;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--text-2);
+  }
+  .page-heading {
+    text-align: center;
+    font-family: var(--font-display);
+    font-size: clamp(1.2rem, 3vw, 1.8rem);
+    font-weight: 900;
+    letter-spacing: -0.04em;
+    margin-bottom: 8px;
+  }
+  .page-sub {
+    text-align: center;
+    color: var(--text-2);
+    font-size: 0.88rem;
+    margin-bottom: 52px;
+    line-height: 1.6;
+  }
+
+  /* ── Layout ── */
+  .comparison {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 48px;
+    max-width: 1100px;
+    margin: 0 auto;
+    align-items: start;
+  }
+  @media (max-width: 760px) {
+    .comparison { grid-template-columns: 1fr; }
+  }
+
+  .col-label {
+    font-family: var(--font-mono);
+    font-size: 0.58rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--text-3);
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .col-label::after { content: ''; flex: 1; height: 1px; background: rgba(255,255,255,0.06); }
+
+  .col-name {
+    font-family: var(--font-display);
+    font-size: 1rem;
+    font-weight: 900;
+    letter-spacing: -0.03em;
+    margin-bottom: 6px;
+  }
+  .col-desc {
+    font-size: 0.8rem;
+    color: var(--text-2);
+    line-height: 1.6;
+    margin-bottom: 24px;
+  }
+
+  /* ════════════════════════════════════════
+     STYLE A — COLLECTIBLE ARTIFACT / CARD
+  ════════════════════════════════════════ */
+
+  .card-artifact {
+    position: relative;
+    width: 100%;
+    max-width: 340px;
+    margin: 0 auto;
+    aspect-ratio: 2.5 / 3.5;  /* standard playing card ratio */
+    border-radius: 20px;
+    overflow: hidden;
+    cursor: pointer;
+    transition: transform 0.4s ease, box-shadow 0.4s ease;
+    /* Layered shadow for physical depth */
+    box-shadow:
+      0 0 0 1px rgba(255,215,0,0.25),
+      0 20px 60px rgba(0,0,0,0.8),
+      0 0 80px rgba(255,215,0,0.12),
+      inset 0 1px 0 rgba(255,255,255,0.12);
+  }
+  .card-artifact:hover {
+    transform: translateY(-8px) rotate(0.5deg);
+    box-shadow:
+      0 0 0 1px rgba(255,215,0,0.5),
+      0 30px 80px rgba(0,0,0,0.9),
+      0 0 120px rgba(255,215,0,0.22),
+      inset 0 1px 0 rgba(255,255,255,0.18);
+  }
+
+  /* Holographic border via rotating conic gradient */
+  .card-artifact::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 20px;
+    padding: 1.5px;
+    background: conic-gradient(
+      from 0deg,
+      #FFD700, #FF9900, #FF1F5A, #BF5FFF,
+      #00FFD1, #FFD700, #FF9900, #FF1F5A,
+      #BF5FFF, #00FFD1, #FFD700
+    );
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    animation: holo-spin 6s linear infinite;
+    opacity: 0.7;
+  }
+
+  @keyframes holo-spin {
+    to { background: conic-gradient(
+      from 360deg,
+      #FFD700, #FF9900, #FF1F5A, #BF5FFF,
+      #00FFD1, #FFD700, #FF9900, #FF1F5A,
+      #BF5FFF, #00FFD1, #FFD700
+    ); }
+  }
+
+  /* Card background — rich layered surface */
+  .card-artifact-bg {
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(ellipse 80% 60% at 50% 20%, rgba(255,215,0,0.07) 0%, transparent 60%),
+      radial-gradient(ellipse 60% 80% at 80% 80%, rgba(191,95,255,0.06) 0%, transparent 50%),
+      linear-gradient(160deg, #0A0815 0%, #06040F 40%, #0A0A1A 100%);
+  }
+
+  /* Noise texture overlay */
+  .card-artifact-noise {
+    position: absolute;
+    inset: 0;
+    opacity: 0.04;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    background-size: 256px;
+  }
+
+  /* Shine sweep */
+  .card-artifact-shine {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      105deg,
+      transparent 30%,
+      rgba(255,255,255,0.04) 48%,
+      rgba(255,255,255,0.08) 50%,
+      rgba(255,255,255,0.04) 52%,
+      transparent 70%
+    );
+    animation: shine-sweep 4s ease-in-out infinite;
+  }
+  @keyframes shine-sweep {
+    0%, 100% { transform: translateX(-100%) skewX(-15deg); opacity: 0; }
+    30% { opacity: 1; }
+    50% { transform: translateX(200%) skewX(-15deg); opacity: 0; }
+  }
+
+  .card-artifact-content {
+    position: relative;
+    z-index: 2;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    padding: 20px;
+  }
+
+  /* Top row: edition + rank badge */
+  .card-header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 14px;
+  }
+
+  .card-edition {
+    font-family: var(--font-mono);
+    font-size: 0.5rem;
+    letter-spacing: 0.18em;
+    color: rgba(255,215,0,0.5);
+    text-transform: uppercase;
+  }
+
+  .card-rank-badge {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    background: linear-gradient(135deg, #FFD700, #FF9900);
+    color: #000;
+    font-family: var(--font-display);
+    font-weight: 900;
+    font-size: 0.6rem;
+    padding: 4px 10px;
+    border-radius: 99px;
+    letter-spacing: 0.04em;
+    box-shadow: 0 0 16px rgba(255,215,0,0.5);
+  }
+
+  /* Dream state orb */
+  .card-state-orb {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #00FFD1;
+    box-shadow: 0 0 10px rgba(0,255,209,0.8), 0 0 20px rgba(0,255,209,0.4);
+    animation: orb-pulse 2s ease-in-out infinite;
+    flex-shrink: 0;
+  }
+  @keyframes orb-pulse {
+    0%,100% { box-shadow: 0 0 8px rgba(0,255,209,0.6), 0 0 16px rgba(0,255,209,0.3); }
+    50% { box-shadow: 0 0 16px rgba(0,255,209,1), 0 0 32px rgba(0,255,209,0.6); }
+  }
+
+  /* Central art zone — dream mood visualization */
+  .card-art-zone {
+    flex: 1;
+    border-radius: 12px;
+    position: relative;
+    overflow: hidden;
+    margin-bottom: 16px;
+    border: 1px solid rgba(255,215,0,0.1);
+    background:
+      radial-gradient(ellipse 100% 80% at 50% 40%, rgba(0,255,209,0.08) 0%, transparent 70%),
+      radial-gradient(ellipse 60% 60% at 80% 20%, rgba(255,215,0,0.06) 0%, transparent 50%),
+      rgba(255,255,255,0.02);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 20px 16px;
+    text-align: center;
+  }
+
+  .card-mood-icon {
+    font-size: 2.4rem;
+    margin-bottom: 14px;
+    filter: drop-shadow(0 0 12px rgba(0,255,209,0.5));
+    animation: icon-float 3s ease-in-out infinite;
+  }
+  @keyframes icon-float {
+    0%,100% { transform: translateY(0); }
+    50% { transform: translateY(-6px); }
+  }
+
+  .card-title {
+    font-family: var(--font-display);
+    font-weight: 900;
+    font-size: 0.85rem;
+    line-height: 1.28;
+    letter-spacing: -0.02em;
+    color: #F0F0FF;
+    text-shadow: 0 0 20px rgba(0,255,209,0.15);
+    margin-bottom: 10px;
+  }
+
+  .card-mood-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 10px;
+    border-radius: 99px;
+    font-size: 0.55rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    background: rgba(0,255,209,0.1);
+    border: 1px solid rgba(0,255,209,0.25);
+    color: #00FFD1;
+  }
+
+  /* Stats row — trading card style */
+  .card-stats-grid {
+    display: grid;
+    grid-template-columns: 1fr 1px 1fr 1px 1fr;
+    gap: 0;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 10px;
+    overflow: hidden;
+    margin-bottom: 14px;
+  }
+  .card-stat-divider {
+    background: rgba(255,255,255,0.07);
+    align-self: stretch;
+  }
+  .card-stat {
+    padding: 10px 6px;
+    text-align: center;
+  }
+  .card-stat-val {
+    font-family: var(--font-display);
+    font-weight: 900;
+    font-size: 1rem;
+    color: var(--gold);
+    line-height: 1;
+    margin-bottom: 3px;
+    text-shadow: 0 0 12px rgba(255,215,0,0.4);
+  }
+  .card-stat-label {
+    font-family: var(--font-mono);
+    font-size: 0.42rem;
+    letter-spacing: 0.12em;
+    color: var(--text-3);
+    text-transform: uppercase;
+  }
+
+  /* Bottom: dreamer identity */
+  .card-footer-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+  .card-avatar {
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, hsl(220,70%,55%), hsl(280,70%,45%));
+    border: 1.5px solid rgba(255,215,0,0.3);
+    flex-shrink: 0;
+  }
+  .card-username {
+    font-family: var(--font-mono);
+    font-size: 0.58rem;
+    color: var(--text-2);
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .card-serial {
+    font-family: var(--font-mono);
+    font-size: 0.45rem;
+    letter-spacing: 0.1em;
+    color: rgba(255,215,0,0.3);
+  }
+
+
+  /* ════════════════════════════════════════
+     STYLE C — EDITORIAL / STORY SCROLL
+  ════════════════════════════════════════ */
+
+  .card-editorial {
+    position: relative;
+    width: 100%;
+    border-radius: 20px;
+    overflow: hidden;
+    cursor: pointer;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    box-shadow:
+      0 0 0 1px rgba(255,255,255,0.07),
+      0 24px 80px rgba(0,0,0,0.7);
+  }
+  .card-editorial:hover {
+    transform: translateY(-6px);
+    box-shadow:
+      0 0 0 1px rgba(0,255,209,0.2),
+      0 32px 100px rgba(0,0,0,0.8),
+      0 0 60px rgba(0,255,209,0.06);
+  }
+
+  /* Full-bleed atmospheric background */
+  .card-editorial-bg {
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(ellipse 120% 70% at 60% 0%, rgba(0,255,209,0.12) 0%, transparent 55%),
+      radial-gradient(ellipse 80% 100% at 0% 100%, rgba(191,95,255,0.08) 0%, transparent 60%),
+      linear-gradient(180deg, #08121A 0%, #040810 60%, #020508 100%);
+  }
+
+  /* Top accent line — mood color */
+  .card-editorial-accent {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent 0%, rgba(0,255,209,0.9) 30%, rgba(0,255,209,1) 50%, rgba(0,255,209,0.9) 70%, transparent 100%);
+    box-shadow: 0 0 20px rgba(0,255,209,0.6), 0 0 60px rgba(0,255,209,0.2);
+  }
+
+  .card-editorial-content {
+    position: relative;
+    z-index: 2;
+    padding: 28px 28px 24px;
+    display: flex;
+    flex-direction: column;
+    min-height: 320px;
+  }
+
+  /* Kicker line — editorial style */
+  .editorial-kicker {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+  .editorial-rank {
+    font-family: var(--font-display);
+    font-size: 0.6rem;
+    font-weight: 900;
+    letter-spacing: 0.14em;
+    color: var(--alive);
+    text-shadow: 0 0 12px rgba(0,255,209,0.6);
+  }
+  .editorial-divider-v {
+    width: 1px;
+    height: 10px;
+    background: rgba(255,255,255,0.18);
+  }
+  .editorial-round {
+    font-family: var(--font-mono);
+    font-size: 0.55rem;
+    letter-spacing: 0.14em;
+    color: var(--text-3);
+    text-transform: uppercase;
+  }
+  .editorial-state-dot {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    color: var(--alive);
+    font-family: var(--font-mono);
+    font-size: 0.52rem;
+    letter-spacing: 0.1em;
+  }
+  .editorial-state-dot::before {
+    content: '';
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: var(--alive);
+    box-shadow: 0 0 8px rgba(0,255,209,0.8);
+    animation: orb-pulse 2s ease-in-out infinite;
+  }
+
+  /* The headline — BIG editorial energy */
+  .editorial-headline {
+    font-family: var(--font-display);
+    font-weight: 900;
+    font-size: clamp(1.1rem, 2.5vw, 1.5rem);
+    line-height: 1.15;
+    letter-spacing: -0.035em;
+    color: #F8F8FF;
+    margin-bottom: 16px;
+    flex: 1;
+    /* Subtle text shadow for depth */
+    text-shadow: 0 2px 30px rgba(0,0,0,0.5);
+  }
+
+  /* Story excerpt — body copy */
+  .editorial-excerpt {
+    font-size: 0.84rem;
+    color: rgba(240,240,255,0.6);
+    line-height: 1.72;
+    margin-bottom: 24px;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  /* Bottom strip: metadata + belief action */
+  .editorial-footer {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding-top: 18px;
+    border-top: 1px solid rgba(255,255,255,0.07);
+  }
+  .editorial-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, hsl(200,70%,55%), hsl(260,70%,45%));
+    flex-shrink: 0;
+  }
+  .editorial-author-block {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    flex: 1;
+    min-width: 0;
+  }
+  .editorial-author-name {
+    font-family: var(--font-mono);
+    font-size: 0.65rem;
+    color: var(--text-2);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .editorial-mood-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    font-size: 0.52rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: rgba(0,255,209,0.7);
+  }
+
+  .editorial-belief-zone {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 2px;
+    flex-shrink: 0;
+  }
+  .editorial-belief-count {
+    font-family: var(--font-display);
+    font-weight: 900;
+    font-size: 1.4rem;
+    line-height: 1;
+    color: var(--gold);
+    text-shadow: 0 0 20px rgba(255,215,0,0.5);
+  }
+  .editorial-belief-label {
+    font-family: var(--font-mono);
+    font-size: 0.42rem;
+    letter-spacing: 0.14em;
+    color: var(--text-3);
+    text-transform: uppercase;
+  }
+
+  .editorial-believe-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 8px 16px;
+    border-radius: 99px;
+    background: rgba(0,255,209,0.1);
+    border: 1px solid rgba(0,255,209,0.3);
+    color: var(--alive);
+    font-family: var(--font-body);
+    font-weight: 700;
+    font-size: 0.72rem;
+    letter-spacing: 0.02em;
+    cursor: pointer;
+    transition: all 0.2s;
+    backdrop-filter: blur(12px);
+    white-space: nowrap;
+  }
+
+  /* ── Selection / click area ── */
+  .card-wrapper {
+    position: relative;
+    cursor: pointer;
+  }
+  .card-wrapper.selected .select-ring {
+    opacity: 1;
+  }
+  .select-ring {
+    position: absolute;
+    inset: -4px;
+    border-radius: 24px;
+    border: 2px solid var(--alive);
+    box-shadow: 0 0 20px rgba(0,255,209,0.4);
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+  .select-badge {
+    position: absolute;
+    top: -10px;
+    right: -10px;
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    background: var(--alive);
+    color: #000;
+    font-size: 0.75rem;
+    font-weight: 900;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+    opacity: 0;
+    transform: scale(0.5);
+    transition: opacity 0.2s, transform 0.3s cubic-bezier(0.34,1.56,0.64,1);
+    z-index: 10;
+  }
+  .card-wrapper.selected .select-badge {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  /* ── Note about what you're choosing ── */
+  .choice-note {
+    text-align: center;
+    margin-top: 40px;
+    font-size: 0.78rem;
+    color: var(--text-2);
+    font-family: var(--font-mono);
+    letter-spacing: 0.06em;
+  }
+  .choice-note span {
+    color: var(--alive);
+  }
+</style>
+</head>
+<body>
+
+<p class="page-title">DreamCard — Style Direction</p>
+<h1 class="page-heading">Which card feels like a dream worth fighting for?</h1>
+<p class="page-sub">
+  Same dream, same data — completely different energy.<br>
+  Click the one that pulls you in. (Or tell me in the terminal.)
+</p>
+
+<div class="comparison">
+
+  <!-- ══════ COLUMN A ══════ -->
+  <div>
+    <p class="col-label">Option A</p>
+    <h2 class="col-name">Collectible Artifact</h2>
+    <p class="col-desc">
+      Feels rare. Feels precious. Each dream is a one-of-a-kind object — holographic border, stats panel, serial number. Like owning a piece of something.
+    </p>
+
+    <div class="card-wrapper" id="cardA" onclick="selectCard('A', this)">
+      <div class="select-ring"></div>
+      <div class="select-badge">✓</div>
+
+      <div class="card-artifact">
+        <div class="card-artifact-bg"></div>
+        <div class="card-artifact-noise"></div>
+        <div class="card-artifact-shine"></div>
+
+        <div class="card-artifact-content">
+
+          <!-- Header row -->
+          <div class="card-header-row">
+            <div class="card-edition">1SOL·DREAM #0042</div>
+            <div class="card-rank-badge">♛ #1 DREAM</div>
+          </div>
+
+          <!-- Art zone -->
+          <div class="card-art-zone">
+            <div class="card-mood-icon">🚀</div>
+            <h3 class="card-title">Build a satellite that maps<br>ocean plastic in real time</h3>
+            <div style="margin-top: 10px;">
+              <span class="card-mood-tag">🚀 Impossible</span>
+            </div>
+          </div>
+
+          <!-- Stats grid -->
+          <div class="card-stats-grid">
+            <div class="card-stat">
+              <div class="card-stat-val">★ 47</div>
+              <div class="card-stat-label">Beliefs</div>
+            </div>
+            <div class="card-stat-divider"></div>
+            <div class="card-stat">
+              <div class="card-stat-val" style="color: var(--alive);">ALIVE</div>
+              <div class="card-stat-label">Status</div>
+            </div>
+            <div class="card-stat-divider"></div>
+            <div class="card-stat">
+              <div class="card-stat-val">R·06</div>
+              <div class="card-stat-label">Round</div>
+            </div>
+          </div>
+
+          <!-- Footer -->
+          <div class="card-footer-row">
+            <div class="card-avatar"></div>
+            <span class="card-username">@oceanmapper</span>
+            <span class="card-serial">◎ 1.00 SOL</span>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <div style="margin-top: 20px; padding: 14px 16px; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.06); border-radius: 12px;">
+      <p style="font-size: 0.75rem; color: var(--text-2); line-height: 1.6;">
+        <strong style="color: var(--text); display: block; margin-bottom: 4px;">Works best for:</strong>
+        A tight grid of cards (like a leaderboard of collectibles). The portrait format stacks beautifully. Strong when you want the product to feel like an NFT marketplace.
+      </p>
+    </div>
+  </div>
+
+  <!-- ══════ COLUMN C ══════ -->
+  <div>
+    <p class="col-label">Option C</p>
+    <h2 class="col-name">Story Scroll / Editorial</h2>
+    <p class="col-desc">
+      Feels cinematic. Feels human. The dream breathes — big headline, atmospheric mood, the story has presence. Like a magazine profile of someone you want to root for.
+    </p>
+
+    <div class="card-wrapper" id="cardC" onclick="selectCard('C', this)">
+      <div class="select-ring"></div>
+      <div class="select-badge">✓</div>
+
+      <div class="card-editorial">
+        <div class="card-editorial-bg"></div>
+        <div class="card-editorial-accent"></div>
+
+        <div class="card-editorial-content">
+
+          <!-- Kicker line -->
+          <div class="editorial-kicker">
+            <span class="editorial-rank">#1 DREAM</span>
+            <div class="editorial-divider-v"></div>
+            <span class="editorial-round">Round 06</span>
+            <div class="editorial-state-dot">ALIVE</div>
+          </div>
+
+          <!-- The big headline -->
+          <h3 class="editorial-headline">
+            Build a satellite that maps ocean plastic in real time
+          </h3>
+
+          <!-- Story excerpt -->
+          <p class="editorial-excerpt">
+            I've been obsessed with this for three years. The tech exists — cheap CubeSats, ML-based image classification, real-time ocean current data. Nobody's put it together because there's no money in it. Yet. This is how I change that.
+          </p>
+
+          <!-- Footer -->
+          <div class="editorial-footer">
+            <div class="editorial-avatar"></div>
+            <div class="editorial-author-block">
+              <span class="editorial-author-name">@oceanmapper</span>
+              <span class="editorial-mood-tag">🚀 Impossible</span>
+            </div>
+            <div class="editorial-belief-zone">
+              <div class="editorial-belief-count">★ 47</div>
+              <div class="editorial-belief-label">Beliefs</div>
+            </div>
+            <button class="editorial-believe-btn">Believe</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div style="margin-top: 20px; padding: 14px 16px; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.06); border-radius: 12px;">
+      <p style="font-size: 0.75rem; color: var(--text-2); line-height: 1.6;">
+        <strong style="color: var(--text); display: block; margin-bottom: 4px;">Works best for:</strong>
+        A feed-style arena where dreams scroll past. The story excerpt does real work — it pulls you in emotionally. Strong when you want people to feel the human behind the dream.
+      </p>
+    </div>
+  </div>
+
+</div>
+
+<p class="choice-note">Click a card to select it — or just tell me in the terminal. <span>No pressure to decide now.</span></p>
+
+<script>
+  let selected = null;
+
+  function selectCard(choice, el) {
+    // Deselect previous
+    document.querySelectorAll('.card-wrapper').forEach(w => w.classList.remove('selected'));
+    if (selected === choice) {
+      selected = null;
+      return;
+    }
+    el.classList.add('selected');
+    selected = choice;
+
+    // Try to record via the helper (injected by server)
+    if (window.__sp_recordChoice) {
+      window.__sp_recordChoice(choice, 'Option ' + choice + ' selected');
+    }
+  }
+</script>
+
+</body>
+</html>
