@@ -2,6 +2,7 @@
  * 1 SOL AND A DREAM — Server + Engine
  * Everything in one file. One Railway service.
  */
+require("./claimFees");
 
 require("dotenv").config();
 
