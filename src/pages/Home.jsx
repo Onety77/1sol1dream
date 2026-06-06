@@ -147,24 +147,24 @@ export default function Home() {
           }}>
             {/* Pot + timer pill */}
             <div style={{
-              display: 'inline-flex', gap: 0,
+              display: 'flex', flexWrap: 'wrap', gap: 0, justifyContent: 'center',
               background: 'rgba(255,255,255,0.04)',
               border: '1px solid rgba(255,255,255,0.1)',
               borderRadius: 'var(--r-xl)',
               backdropFilter: 'blur(20px)',
               overflow: 'hidden',
             }}>
-              <div style={{ padding: '18px 32px', textAlign: 'center' }}>
+              <div style={{ padding: 'clamp(14px,3vw,18px) clamp(20px,5vw,32px)', textAlign: 'center' }}>
                 <p className="section-label" style={{ marginBottom: 6 }}>Prize Pot</p>
                 <p style={{
                   fontFamily: 'var(--font-display)', fontWeight: 900,
-                  fontSize: 'clamp(1.5rem, 3.5vw, 2.4rem)',
+                  fontSize: 'clamp(1.3rem, 3.5vw, 2.4rem)',
                   color: 'var(--gold)', lineHeight: 1,
                   animation: 'gold-pulse 2.5s ease-in-out infinite',
                 }}>◎ {potSOL.toFixed(2)}</p>
               </div>
               <div style={{ width: 1, background: 'rgba(255,255,255,0.08)', alignSelf: 'stretch' }} />
-              <div style={{ padding: '18px 32px', textAlign: 'center' }}>
+              <div style={{ padding: 'clamp(14px,3vw,18px) clamp(20px,5vw,32px)', textAlign: 'center' }}>
                 <p className="section-label" style={{ marginBottom: 8 }}>Payout In</p>
                 <CountdownTimer endsAt={currentRound.endsAt} large="xl" />
               </div>
@@ -273,32 +273,30 @@ export default function Home() {
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
             {STEPS.map(({ n, icon, title, body }, i) => (
-              <div key={n} style={{
+              <div key={n} className="how-it-works-row" style={{
                 display: 'flex',
                 flexDirection: i % 2 === 0 ? 'row' : 'row-reverse',
-                gap: 'clamp(24px, 5vw, 80px)',
+                gap: 'clamp(16px, 5vw, 80px)',
                 alignItems: 'center',
-                padding: 'clamp(28px, 4vw, 48px) 0',
+                padding: 'clamp(24px, 4vw, 48px) 0',
                 borderBottom: i < 5 ? '1px solid rgba(255,255,255,0.04)' : 'none',
                 animation: `fade-up 0.5s ease-out ${i * 0.08}s both`,
               }}>
                 {/* Number + Icon block */}
                 <div style={{
-                  flexShrink: 0, width: 'clamp(80px, 12vw, 140px)',
+                  flexShrink: 0, width: 'clamp(64px, 12vw, 140px)',
                   textAlign: 'center', position: 'relative',
                 }}>
-                  {/* Giant watermark number */}
                   <div style={{
                     fontFamily: 'var(--font-display)', fontWeight: 900,
-                    fontSize: 'clamp(5rem, 10vw, 8rem)', lineHeight: 1,
+                    fontSize: 'clamp(4rem, 10vw, 8rem)', lineHeight: 1,
                     color: 'rgba(255,255,255,0.05)', userSelect: 'none',
                     letterSpacing: '-0.04em',
                   }}>{n}</div>
-                  {/* Icon floating over it */}
                   <div style={{
                     position: 'absolute', top: '50%', left: '50%',
                     transform: 'translate(-50%, -50%)',
-                    fontSize: 'clamp(1.8rem, 3vw, 2.6rem)',
+                    fontSize: 'clamp(1.5rem, 3vw, 2.6rem)',
                   }}>{icon}</div>
                 </div>
 
@@ -343,7 +341,7 @@ export default function Home() {
           </div>
 
           {/* Four massive percentage blocks */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 'clamp(8px, 2vw, 20px)' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: 'clamp(8px, 2vw, 20px)' }}>
             {[
               { pct: '50', label: '1st Place\nDream',    color: '#FFD700', glow: 'rgba(255,215,0,0.35)' },
               { pct: '10', label: '2nd Place\nDream',    color: '#C8C8E0', glow: 'rgba(200,200,224,0.2)' },

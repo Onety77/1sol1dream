@@ -81,7 +81,7 @@ export default function Arena() {
 
           {/* Stats strip */}
           <div style={{
-            display: 'inline-flex', gap: 0,
+            display: 'flex', flexWrap: 'wrap', gap: 0, justifyContent: 'center',
             background: 'rgba(255,255,255,0.03)',
             border: '1px solid rgba(255,255,255,0.08)',
             borderRadius: 'var(--r-xl)', overflow: 'hidden',
@@ -157,9 +157,9 @@ export default function Arena() {
                   <p className="section-label">Chasing the lead</p>
                   <div style={{ flex: 1, height: 1, background: 'rgba(255,255,255,0.05)' }} />
                 </div>
-                <div style={{
+                <div className="dream-card-grid" style={{
                   display: 'grid',
-                  gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 260px))',
+                  gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 260px))',
                   gap: 24, justifyContent: 'center',
                 }}>
                   {topDreams.slice(1, 3).map((d, i) => (

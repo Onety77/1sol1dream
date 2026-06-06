@@ -196,7 +196,7 @@ export default function Signup() {
                   ⚡ Requirement
                 </p>
                 <p style={{ fontSize: '0.78rem', color: 'var(--text-2)', lineHeight: 1.6 }}>
-                  Must hold ≥ 1 SOL worth of the project token. Wallet must have held for at least 30 minutes before actions unlock.
+                  Must hold ≥ 1 SOL worth of the project token. Paste your Solana wallet address — no browser extension needed.
                 </p>
               </div>
 

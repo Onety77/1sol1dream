@@ -222,7 +222,12 @@ app.get("/api/profile/:wallet", async (req, res) => {
       .where("walletAddress", "==", req.params.wallet)
       .where("isDeleted", "==", false)
       .orderBy("createdAt", "desc").limit(20).get();
-    res.json({ ...u, userId: snap.docs[0].id, dreams: dreamsSnap.docs.map(d => ({ id: d.id, ...d.data() })) });
+    const wa = req.params.wallet;
+    res.json({
+      ...u, userId: snap.docs[0].id,
+      walletShort: `${wa.slice(0, 4)}...${wa.slice(-4)}`,
+      dreams: dreamsSnap.docs.map(d => ({ id: d.id, ...d.data() })),
+    });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
@@ -242,7 +247,7 @@ app.get("/api/dreams", async (req, res) => {
   try {
     const { filter, limit: lim = 50 } = req.query;
     let q = db.collection("dreams").where("isDeleted", "==", false).where("isRetired", "==", false);
-    if (filter === "fading")   q = q.where("state", "in", ["fading", "grey"]).orderBy("beliefCount", "desc");
+    if (filter === "faded")    q = q.where("state", "in", ["grey", "resurrected"]).orderBy("beliefCount", "desc");
     else if (filter === "new") q = q.orderBy("createdAt", "desc");
     else if (filter === "rising") q = q.orderBy("recentBeliefs", "desc");
     else q = q.orderBy("beliefCount", "desc");
@@ -317,6 +322,7 @@ app.post("/api/dreams", auth, holder, async (req, res) => {
     };
     await ref.set(dream);
     await db.doc("dream_stats/global").set({ totalDreams: FieldValue.increment(1) }, { merge: true });
+    await db.collection("dream_users").doc(req.user.userId).update({ roundsParticipated: FieldValue.increment(1) });
     res.status(201).json({ dream: { id: ref.id, ...dream } });
     log(`[dream] "${title.slice(0, 40)}" by ${user.username}`);
   } catch (e) { res.status(500).json({ error: e.message }); }
@@ -393,11 +399,11 @@ app.get("/api/beliefs/me", auth, async (req, res) => {
     if (!roundSnap.exists) return res.json({ dreamIds: [], totalBeliefs: 0, remaining: FREE_BELIEFS, purchasedBeliefs: 0 });
     const { roundId } = roundSnap.data();
     const doc = await db.collection("dream_beliefs").doc(`${roundId}_${req.user.userId}`).get();
-    if (!doc.exists) return res.json({ dreamIds: [], totalBeliefs: 0, remaining: FREE_BELIEFS, purchasedBeliefs: 0 });
+    if (!doc.exists) return res.json({ beliefs: [], totalBeliefs: 0, remaining: FREE_BELIEFS, purchasedBeliefs: 0 });
     const d = doc.data();
     const maxAvail = Math.min(MAX_BELIEFS, FREE_BELIEFS + (d.purchasedBeliefs || 0));
     res.json({
-      dreamIds: d.dreamIds || [],
+      beliefs: d.dreamIds || [],
       beliefTimestamps: d.beliefTimestamps || {},
       totalBeliefs: d.totalBeliefs || 0,
       purchasedBeliefs: d.purchasedBeliefs || 0,
@@ -488,6 +494,21 @@ app.delete("/api/beliefs/:dreamId", auth, async (req, res) => {
     batch.update(db.collection("dreams").doc(dreamId), { beliefCount: FieldValue.increment(-1), recentBeliefs: FieldValue.increment(-1) });
     await batch.commit();
     res.json({ success: true });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+app.get("/api/config", async (req, res) => {
+  try {
+    const snap = await db.doc("config/platform").get();
+    const costs = snap.exists ? (snap.data().beliefCosts || {}) : {};
+    res.json({
+      creatorWallet: CREATOR_WALLET,
+      beliefCosts: {
+        fourth: costs.fourth || 1000,
+        fifth:  costs.fifth  || 2000,
+        sixth:  costs.sixth  || 4000,
+      },
+    });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 

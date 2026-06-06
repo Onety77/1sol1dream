@@ -5,16 +5,11 @@ import { useAuthStore } from '../store/authStore';
 import { formatDistanceToNow } from 'date-fns';
 
 const BADGE_META = {
-  'day-one':      { icon: '🌅', label: 'Day One', desc: 'Joined in the first week' },
-  'funded':       { icon: '💰', label: 'Funded', desc: 'Won a round' },
-  'kingmaker':    { icon: '♛',  label: 'Kingmaker', desc: 'Believed in a winning dream' },
-  'never-sold':   { icon: '🔒', label: 'Never Sold', desc: '30 consecutive days above threshold' },
-  'true-believer':{ icon: '⭐', label: 'True Believer', desc: 'Backed 20+ winning dreams' },
-  'faded':        { icon: '💀', label: 'Faded', desc: 'Dropped below threshold once' },
-  'resurrected':  { icon: '⚡', label: 'Resurrected', desc: 'Came back after fading' },
-  'fulfilled':    { icon: '🌱', label: 'Fulfilled', desc: 'Posted proof after winning' },
-  'all-in':       { icon: '🎲', label: 'All In', desc: 'Used all 6 beliefs in one round' },
-  'unbroken':     { icon: '🔥', label: 'Unbroken', desc: '100-day streak' },
+  'funded':      { icon: '💰', label: 'Funded',      desc: 'Won a round' },
+  'kingmaker':   { icon: '♛',  label: 'Kingmaker',   desc: 'Believed in a winning dream' },
+  'faded':       { icon: '💀', label: 'Faded',        desc: 'Dropped below threshold once' },
+  'resurrected': { icon: '⚡', label: 'Resurrected',  desc: 'Came back after fading' },
+  'fulfilled':   { icon: '🌱', label: 'Fulfilled',    desc: 'Posted proof after winning' },
 };
 
 const STATE_COLOR = { alive: 'var(--alive)', fading: 'var(--fading)', grey: 'var(--text-3)', resurrected: 'var(--resurrected)', crowned: 'var(--crowned)' };

@@ -54,4 +54,8 @@ export const wallet = {
   verify: (addr) => api.get(`/api/verify-wallet?wallet=${addr}`).then(r => r.data),
 };
 
+export const config = {
+  get: () => api.get('/api/config').then(r => r.data),
+};
+
 export default api;

@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { beliefs as beliefApi } from '../../services/api';
 import { useAuthStore } from '../../store/authStore';
 import { useState } from 'react';
+import BoostModal from './BoostModal';
 
 const STATE_META = {
   alive:       { label: 'ALIVE',       color: '#00FFD1', rgb: '0,255,209',   bg: 'rgba(0,255,209,0.08)',   border: 'rgba(0,255,209,0.22)'  },
@@ -123,10 +124,11 @@ function CompactCard({ dream, myBeliefs, onBelief, rank }) {
 /* ── Full Artifact Card ────────────────────────────────────────────── */
 export default function DreamCard({ dream, myBeliefs = [], onBelief, rank, compact = false }) {
   const { user } = useAuthStore();
-  const [loading, setLoading]   = useState(false);
-  const [count, setCount]       = useState(dream.beliefCount || 0);
-  const [believed, setBelieved] = useState(myBeliefs.includes(dream.id));
-  const [hovered, setHovered]   = useState(false);
+  const [loading, setLoading]     = useState(false);
+  const [count, setCount]         = useState(dream.beliefCount || 0);
+  const [believed, setBelieved]   = useState(myBeliefs.includes(dream.id));
+  const [hovered, setHovered]     = useState(false);
+  const [boostOpen, setBoostOpen] = useState(false);
 
   if (compact) {
     return <CompactCard dream={dream} myBeliefs={myBeliefs} onBelief={onBelief} rank={rank} />;
@@ -363,6 +365,24 @@ export default function DreamCard({ dream, myBeliefs = [], onBelief, rank, compa
               }}>@{dream.username}</span>
             </Link>
 
+            {/* Boost button — logged-in users only */}
+            {user && !isGrey && (
+              <button
+                onClick={e => { e.stopPropagation(); setBoostOpen(true); }}
+                title="Boost this dream"
+                style={{
+                  width: 24, height: 24, borderRadius: '50%', flexShrink: 0,
+                  background: 'rgba(191,95,255,0.1)',
+                  border: '1px solid rgba(191,95,255,0.25)',
+                  color: 'var(--resurrected)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  fontSize: '0.65rem', cursor: 'pointer', transition: 'all 0.2s',
+                }}
+                onMouseEnter={e => { e.currentTarget.style.background = 'rgba(191,95,255,0.22)'; }}
+                onMouseLeave={e => { e.currentTarget.style.background = 'rgba(191,95,255,0.1)'; }}
+              >⚡</button>
+            )}
+
             {/* Believe button or status */}
             {canBelieve && (
               <button
@@ -396,6 +416,8 @@ export default function DreamCard({ dream, myBeliefs = [], onBelief, rank, compa
 
         </div>
       </div>
+
+      <BoostModal open={boostOpen} onClose={() => setBoostOpen(false)} dream={dream} />
     </div>
   );
 }

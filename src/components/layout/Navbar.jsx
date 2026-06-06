@@ -71,7 +71,7 @@ export default function Navbar() {
 
         {/* Round pill */}
         {currentRound && (
-          <div style={{
+          <div className="navbar-round-pill" style={{
             background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.09)',
             borderRadius: 'var(--r-full)', padding: '5px 14px',
             display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0,

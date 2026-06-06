@@ -10,7 +10,7 @@ const FILTERS = [
   { key: 'top',    label: 'Top',    icon: '🔥' },
   { key: 'rising', label: 'Rising', icon: '📈' },
   { key: 'new',    label: 'New',    icon: '✦' },
-  { key: 'fading', label: 'Fading', icon: '⚠' },
+  { key: 'faded',  label: 'Faded',  icon: '💀' },
 ];
 
 export default function Dreamboard() {
@@ -176,9 +176,9 @@ export default function Dreamboard() {
             )}
           </div>
         ) : (
-          <div style={{
+          <div className="dream-card-grid" style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 260px))',
+            gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 260px))',
             gap: 24,
             justifyContent: 'center',
           }}>
