@@ -22,11 +22,11 @@ const SOLANA_RPC     = process.env.SOLANA_RPC;
 const TOKEN_CA       = process.env.TOKEN_CA;
 const CREATOR_WALLET = process.env.CREATOR_WALLET;
 const ST_KEY         = process.env.SOLANATRACKER_API_KEY || "";
-const ROUND_MS       = parseInt(process.env.ROUND_DURATION_MS || "21600000");
+const ROUND_MS       = parseInt(process.env.ROUND_DURATION_MS || "3600000");
 const GAS_RESERVE    = parseFloat(process.env.GAS_RESERVE_SOL || "0.1");
 const FREE_BELIEFS   = 3;
 const MAX_BELIEFS    = 6;
-const LOCK_MS        = 3600000; // 1 hour belief lock
+const LOCK_MS        = 15 * 60 * 1000; // 15 minute belief lock
 
 ["JWT_SECRET","SOLANA_RPC","TOKEN_CA","CREATOR_WALLET","CREATOR_PRIVATE_KEY","FIREBASE_SERVICE_ACCOUNT_JSON"].forEach(k => {
   if (!process.env[k]) { console.error(`Missing env: ${k}`); process.exit(1); }
@@ -487,7 +487,7 @@ app.delete("/api/beliefs/:dreamId", auth, async (req, res) => {
 
     const placed = beliefSnap.data().beliefTimestamps?.[dreamId] || 0;
     if (Date.now() - placed > LOCK_MS)
-      return res.status(400).json({ error: "This belief has locked — it has been more than 1 hour since you placed it." });
+      return res.status(400).json({ error: "This belief has locked — it has been more than 15 minutes since you placed it." });
 
     const batch = db.batch();
     batch.update(beliefRef, { dreamIds: FieldValue.arrayRemove(dreamId), totalBeliefs: FieldValue.increment(-1) });

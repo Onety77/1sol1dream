@@ -1,7 +1,6 @@
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
 import Navbar from './Navbar';
 import StarField from '../ui/StarField';
-import RoundWidget from '../ui/RoundWidget';
 import { useEffect } from 'react';
 import { listenCurrentRound, listenGlobalStats } from '../../services/firebase';
 import { useRoundStore } from '../../store/roundStore';
@@ -28,7 +27,6 @@ export default function Layout() {
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', position: 'relative' }}>
       <StarField />
       <Navbar />
-      <RoundWidget />
       <main style={{ flex: 1, position: 'relative', zIndex: 1 }}>
         <Outlet />
       </main>

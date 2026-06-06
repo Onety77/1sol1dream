@@ -21,7 +21,7 @@ export default function Arena() {
       : new Date(currentRound.endsAt);
     return end - Date.now();
   })();
-  const isFinalHour = timeLeft !== null && timeLeft < 600000 && timeLeft > 0;
+  const isFinalWindow = timeLeft !== null && timeLeft < 900000 && timeLeft > 0;
 
   const refreshBeliefs = () =>
     beliefApi.my().then(d => setMyBeliefs(d.beliefs || [])).catch(() => {});
@@ -38,7 +38,7 @@ export default function Arena() {
       minHeight: '100vh',
       paddingTop: 72,
       paddingBottom: 100,
-      background: isFinalHour
+      background: isFinalWindow
         ? 'radial-gradient(ellipse 80% 50% at 50% 0%, rgba(255,31,90,0.07) 0%, transparent 60%)'
         : 'radial-gradient(ellipse 80% 50% at 50% 0%, rgba(255,215,0,0.04) 0%, transparent 60%)',
     }}>
@@ -47,7 +47,7 @@ export default function Arena() {
       <div style={{ padding: 'clamp(36px,5vw,56px) 0 clamp(28px,4vw,40px)', textAlign: 'center' }}>
         <div className="container">
 
-          {isFinalHour && (
+          {isFinalWindow && (
             <div style={{
               display: 'inline-flex', alignItems: 'center', gap: 8,
               marginBottom: 20, padding: '7px 18px',
@@ -57,7 +57,7 @@ export default function Arena() {
               animation: 'fading-breathe 1.5s ease-in-out infinite',
             }}>
               <div style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--fading)', animation: 'blink 1s ease-in-out infinite' }} />
-              FINAL HOUR — Beliefs locking soon
+              FINAL 15 MINUTES — Beliefs locking soon
             </div>
           )}
 

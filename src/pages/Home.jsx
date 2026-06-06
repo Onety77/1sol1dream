@@ -19,7 +19,7 @@ const TICKER = [
 const STEPS = [
   { n: '01', icon: '🎫', title: 'Hold the Token', body: 'Must hold ≥ 1 SOL worth of the project token. No Phantom needed — just paste your wallet address.' },
   { n: '02', icon: '🌟', title: 'Post Your Dream', body: 'One dream per wallet. 20-word title. 280-character story. Pick a mood. Add proof if you have it.' },
-  { n: '03', icon: '✨', title: 'Earn Beliefs', body: 'Every holder gets 3 free Beliefs per 6-hour round. Back the dreams you think deserve to win.' },
+  { n: '03', icon: '✨', title: 'Earn Beliefs', body: 'Every holder gets 3 free Beliefs per 1-hour round. Back the dreams you think deserve to win.' },
   { n: '04', icon: '💰', title: 'Win Real SOL', body: '50% to the top dream. 10% each to 2nd and 3rd. 30% split among everyone who believed in the winner.' },
   { n: '05', icon: '💀', title: 'Sell = Die', body: 'Drop below the threshold and your dream turns grey in public. The whole platform watches you fade.' },
   { n: '06', icon: '♛', title: 'Win & Retire', body: 'Winning dreams are retired to the Hall of Dreams forever. The highest honor. It cannot be undone.' },
@@ -119,7 +119,7 @@ export default function Home() {
           animation: 'fade-up 0.7s ease-out 0.2s both',
         }}>
           Post your real dream. Compete for community belief.
-          Win <span style={{ color: 'var(--gold)', fontWeight: 600 }}>real SOL</span> from trading fees every 6 hours.
+          Win <span style={{ color: 'var(--gold)', fontWeight: 600 }}>real SOL</span> from trading fees every hour.
           Selling kills your dream — <span style={{ color: 'var(--fading)' }}>publicly</span>.
         </p>
 
@@ -176,7 +176,7 @@ export default function Home() {
               letterSpacing: '0.18em', color: 'var(--text-3)',
               textTransform: 'uppercase',
             }}>
-              Round {currentRound.roundNumber} · Every 6 hours · Winner takes 50%
+              Round {currentRound.roundNumber} · Every hour · Winner takes 50%
             </p>
           </div>
         )}
@@ -336,7 +336,7 @@ export default function Home() {
               fontSize: 'clamp(1.6rem, 3.5vw, 2.6rem)', letterSpacing: '-0.04em',
             }}>The Split</h2>
             <p style={{ color: 'var(--text-2)', marginTop: 12, fontSize: '0.9rem', lineHeight: 1.7 }}>
-              Every 6 hours, trading fees get redistributed. Dreamers fight for it. Believers bet on it.
+              Every hour, trading fees get redistributed. Dreamers fight for it. Believers bet on it.
             </p>
           </div>
 
