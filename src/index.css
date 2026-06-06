@@ -389,16 +389,6 @@ img { max-width: 100%; display: block; }
 
 /* ── Mobile layout overrides ────────────────────────────────────────── */
 @media (max-width: 600px) {
-  /* How It Works zigzag — always column on small screens */
-  .how-it-works-row {
-    flex-direction: column !important;
-    text-align: left !important;
-    align-items: flex-start !important;
-  }
-  .how-it-works-row > div:last-child {
-    text-align: left !important;
-  }
-
   /* Arena / Dreamboard card grids */
   .dream-card-grid {
     grid-template-columns: repeat(auto-fill, minmax(145px, 1fr)) !important;
