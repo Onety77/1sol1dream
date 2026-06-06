@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 // ── PASTE YOUR RAILWAY URL HERE (no trailing slash) ──────────
-const BASE = 'https://PASTE_YOUR_RAILWAY_URL_HERE';
+const BASE = 'https://1sol1dream-production.up.railway.app';
 // ────────────────────────────────────────────────────────────
 
 const api = axios.create({ baseURL: BASE });
