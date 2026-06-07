@@ -502,6 +502,7 @@ app.post("/api/dreams/:id/comments", auth, async (req, res) => {
 
     const userSnap = await db.collection("dream_users").doc(req.user.userId).get();
     const user = userSnap.data();
+    if (!user) return res.status(404).json({ error: "User not found" });
 
     const commentRef = db.collection("dream_comments").doc();
     const comment = {
