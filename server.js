@@ -602,6 +602,32 @@ app.post("/api/beliefs/:dreamId", auth, holder, async (req, res) => {
     });
     batch.set(db.doc("dream_stats/global"), { totalBeliefsPlaced: FieldValue.increment(1) }, { merge: true });
     await batch.commit();
+
+    // ── Notify dream owner ────────────────────────────────────
+    if (dream.userId !== userId) {
+      notify(dream.userId, "belief_received", {
+        fromUsername: req.user.username,
+        dreamTitle:   dream.title,
+        dreamId,
+      });
+
+      // Rank-change: notify once if this dream just became #1
+      const topSnap = await db.collection("dreams")
+        .where("isDeleted",  "==", false)
+        .where("isRetired",  "==", false)
+        .orderBy("beliefCount", "desc").limit(1).get();
+
+      if (!topSnap.empty && topSnap.docs[0].id === dreamId) {
+        const existingRankSnap = await db.collection("dream_notifications")
+          .where("type",    "==", "rank_change")
+          .where("dreamId", "==", dreamId)
+          .limit(1).get();
+        if (existingRankSnap.empty) {
+          notify(dream.userId, "rank_change", { dreamId, dreamTitle: dream.title });
+        }
+      }
+    }
+
     await db.collection("dream_users").doc(userId).update({ totalBeliefsGiven: FieldValue.increment(1) });
 
     const newTotal = (bs.totalBeliefs || 0) + 1;
@@ -740,15 +766,16 @@ async function closeRound(round) {
 
     // Build payout map
     const payouts = {};
+    // Fetch believerSnap here so it's in scope for notifications below
+    const believerSnap = await db.collection("dream_beliefs_log")
+      .where("dreamId", "==", first.id).where("roundId", "==", round.roundId).get();
+    const believers = [...new Set(believerSnap.docs.map(d => d.data().walletAddress))];
     if (prizePool > 0.001) {
       payouts[first.walletAddress] = (payouts[first.walletAddress] || 0) + prizePool * 0.5;
       if (second) payouts[second.walletAddress] = (payouts[second.walletAddress] || 0) + prizePool * 0.1;
       if (third)  payouts[third.walletAddress]  = (payouts[third.walletAddress]  || 0) + prizePool * 0.1;
 
       // 30% split among believers of 1st place
-      const believerSnap = await db.collection("dream_beliefs_log")
-        .where("dreamId", "==", first.id).where("roundId", "==", round.roundId).get();
-      const believers = [...new Set(believerSnap.docs.map(d => d.data().walletAddress))];
       if (believers.length) {
         const share = (prizePool * 0.3) / believers.length;
         believers.forEach(w => { payouts[w] = (payouts[w] || 0) + share; });
@@ -836,6 +863,25 @@ async function closeRound(round) {
 
     await batch.commit();
     log(`[engine] Round ${round.roundNumber} complete. Winner: "${first.title}"`);
+
+    // ── Notifications ─────────────────────────────────────────
+    notify(first.userId, "round_won", {
+      dreamId:    first.id,
+      dreamTitle: first.title,
+      solAmount:  payouts[first.walletAddress] || 0,
+    });
+
+    const share = believers.length > 0 ? (prizePool * 0.3) / believers.length : 0;
+    const uniqueBelieverUserIds = [...new Set(believerSnap.docs.map(d => d.data().userId))].filter(Boolean);
+    for (const bUserId of uniqueBelieverUserIds) {
+      if (bUserId !== first.userId) {
+        notify(bUserId, "believer_won", {
+          dreamId:    first.id,
+          dreamTitle: first.title,
+          solAmount:  share,
+        });
+      }
+    }
 
   } catch (e) {
     log(`[engine] closeRound ERROR: ${e.message}`);
