@@ -115,7 +115,7 @@ async function checkHolding(walletAddress) {
     getSOLPriceUSD(),
   ]);
   const solValue = solPrice > 0 ? (bal * tokenPrice) / solPrice : 0;
-  return { qualified: solValue >= 1.0, solValue, tokenBalance: bal };
+  return { qualified: solValue >= 0.05, solValue, tokenBalance: bal };
 }
 
 async function getCreatorSOLBalance() {
@@ -932,7 +932,7 @@ async function holderTick() {
       try {
         const bal       = await getTokenBalance(dream.walletAddress);
         const solValue  = (bal * tokenPrice) / solPrice;
-        const qualified = solValue >= 1.0;
+        const qualified = solValue >= 0.05;
 
         let newState = dream.state;
         if (!qualified && dream.state !== "grey") newState = "grey";
