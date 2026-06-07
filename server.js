@@ -481,6 +481,55 @@ app.delete("/api/dreams/:id", auth, async (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
+app.get("/api/dreams/:id/comments", async (req, res) => {
+  try {
+    const snap = await db.collection("dream_comments")
+      .where("dreamId", "==", req.params.id)
+      .orderBy("createdAt", "asc").limit(100).get();
+    res.json({ comments: snap.docs.map(d => ({ id: d.id, ...d.data() })) });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+app.post("/api/dreams/:id/comments", auth, async (req, res) => {
+  try {
+    const { text } = req.body;
+    if (!text?.trim()) return res.status(400).json({ error: "text required" });
+    if (text.length > 500) return res.status(400).json({ error: "Comment must be 500 characters or fewer" });
+
+    const dreamSnap = await db.collection("dreams").doc(req.params.id).get();
+    if (!dreamSnap.exists) return res.status(404).json({ error: "Dream not found" });
+    const dream = dreamSnap.data();
+
+    const userSnap = await db.collection("dream_users").doc(req.user.userId).get();
+    const user = userSnap.data();
+
+    const commentRef = db.collection("dream_comments").doc();
+    const comment = {
+      dreamId: req.params.id,
+      userId:  req.user.userId,
+      username: user.username,
+      profilePicUrl: user.profilePicUrl || "",
+      text: text.trim(),
+      createdAt: Timestamp.now(),
+    };
+
+    const batch = db.batch();
+    batch.set(commentRef, comment);
+    batch.update(dreamSnap.ref, { commentCount: FieldValue.increment(1) });
+    await batch.commit();
+
+    if (dream.userId !== req.user.userId) {
+      notify(dream.userId, "comment_received", {
+        fromUsername: user.username,
+        dreamId: req.params.id,
+        dreamTitle: dream.title,
+      });
+    }
+
+    res.status(201).json({ comment: { id: commentRef.id, ...comment } });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
 // ── Beliefs ──────────────────────────────────────────────────
 app.get("/api/beliefs/me", auth, async (req, res) => {
   try {
