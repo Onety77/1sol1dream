@@ -7,16 +7,16 @@
 
 const { PublicKey, LAMPORTS_PER_SOL } = require("@solana/web3.js");
 
-const PUMP_PROGRAM     = new PublicKey("6EF8rrecthR5Dkzon8Nwu78hRvfCKubJ14M5uBEwF6P");
-const PUMPSWAP_PROGRAM = new PublicKey("pAMMBay6oceH9fJKBRHGP5D4bD4sWpmSwMn52FMfXEA");
-const WSOL_MINT        = new PublicKey("So11111111111111111111111111111111111111112");
+const PUMP_PROGRAM = new PublicKey("6EF8rrecthR5Dkzon8Nwu78hRvfCKubJ14M5uBEwF6P");
+const WSOL_MINT    = new PublicKey("So11111111111111111111111111111111111111112");
+
+const SPL_TOKEN    = new PublicKey("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA");
+const ATA_PROGRAM  = new PublicKey("ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJe1bVd");
 
 const CLAIM_INTERVAL = 20_000; // check every 20 seconds
-const MIN_CLAIM_SOL  = 0.01;   // minimum worth logging
+const MIN_CLAIM_SOL  = 0.01;
 
 function deriveATA(owner, mint) {
-  const SPL_TOKEN   = new PublicKey("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA");
-  const ATA_PROGRAM = new PublicKey("ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJe1ETWNF");
   const [addr] = PublicKey.findProgramAddressSync(
     [owner.toBuffer(), SPL_TOKEN.toBuffer(), mint.toBuffer()],
     ATA_PROGRAM
@@ -33,43 +33,48 @@ function deriveBondingCurve(mint) {
 }
 
 async function startAutoClaimFees(connection, creatorKP, log) {
-  const TOKEN_CA = process.env.TOKEN_CA;
-  if (!TOKEN_CA) { log("[claimFees] No TOKEN_CA — skipping fee claimer"); return; }
+  try {
+    const TOKEN_CA = process.env.TOKEN_CA;
+    if (!TOKEN_CA) { log("[claimFees] No TOKEN_CA — skipping fee claimer"); return; }
 
-  const mintPub       = new PublicKey(TOKEN_CA);
-  const bondingCurve  = deriveBondingCurve(mintPub);
-  const pumpSwapVault = deriveATA(bondingCurve, WSOL_MINT);
+    const mintPub       = new PublicKey(TOKEN_CA);
+    const bondingCurve  = deriveBondingCurve(mintPub);
+    const pumpSwapVault = deriveATA(bondingCurve, WSOL_MINT);
 
-  log(`[claimFees] Monitoring pump.fun vault: ${bondingCurve.toString().slice(0, 12)}...`);
-  log(`[claimFees] Monitoring PumpSwap WSOL:  ${pumpSwapVault.toString().slice(0, 12)}...`);
-  log(`[claimFees] Creator:                   ${creatorKP.publicKey.toString().slice(0, 12)}...`);
+    log(`[claimFees] Monitoring pump.fun vault: ${bondingCurve.toString().slice(0, 12)}...`);
+    log(`[claimFees] Monitoring PumpSwap WSOL:  ${pumpSwapVault.toString().slice(0, 12)}...`);
 
-  async function checkAndClaim() {
-    try {
-      // Pre-graduation: native SOL on the bonding curve
-      const balLam = await connection.getBalance(bondingCurve);
-      if (balLam > MIN_CLAIM_SOL * LAMPORTS_PER_SOL) {
-        log(`[claimFees] pump.fun balance: ${(balLam / LAMPORTS_PER_SOL).toFixed(4)} SOL — awaiting auto-distribution`);
-      }
-
-      // Post-graduation: WSOL in PumpSwap vault
+    async function checkAndClaim() {
       try {
-        const wsolBal = await connection.getTokenAccountBalance(pumpSwapVault);
-        const wsolAmt = parseFloat(wsolBal.value.uiAmount || 0);
-        if (wsolAmt > MIN_CLAIM_SOL) {
-          log(`[claimFees] PumpSwap WSOL: ${wsolAmt.toFixed(4)} SOL — fees accumulating`);
+        // Pre-graduation: native SOL on the bonding curve
+        const balLam = await connection.getBalance(bondingCurve);
+        if (balLam > MIN_CLAIM_SOL * LAMPORTS_PER_SOL) {
+          log(`[claimFees] pump.fun balance: ${(balLam / LAMPORTS_PER_SOL).toFixed(4)} SOL — fees accumulating`);
         }
-      } catch {}
 
-    } catch (e) {
-      if (!e.message?.includes("could not find account")) {
-        log(`[claimFees] Error: ${e.message}`);
+        // Post-graduation: WSOL in PumpSwap vault
+        try {
+          const wsolBal = await connection.getTokenAccountBalance(pumpSwapVault);
+          const wsolAmt = parseFloat(wsolBal.value.uiAmount || 0);
+          if (wsolAmt > MIN_CLAIM_SOL) {
+            log(`[claimFees] PumpSwap WSOL: ${wsolAmt.toFixed(4)} SOL — fees accumulating`);
+          }
+        } catch {}
+
+      } catch (e) {
+        if (!e.message?.includes("could not find account")) {
+          log(`[claimFees] check error: ${e.message}`);
+        }
       }
     }
-  }
 
-  checkAndClaim();
-  setInterval(checkAndClaim, CLAIM_INTERVAL);
+    checkAndClaim();
+    setInterval(checkAndClaim, CLAIM_INTERVAL);
+
+  } catch (e) {
+    // Never crash the server — claimFees is monitoring only
+    log(`[claimFees] Failed to start: ${e.message}`);
+  }
 }
 
 module.exports = { startAutoClaimFees };
