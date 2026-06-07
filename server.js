@@ -348,11 +348,19 @@ app.post("/api/dreams/generate-title", auth, async (req, res) => {
 
 app.post("/api/dreams", auth, holder, async (req, res) => {
   try {
-    const { title, story, mood, proofImageUrl, proofLink } = req.body;
+    const { title, body, mood, images, links } = req.body;
     if (!title?.trim()) return res.status(400).json({ error: "Title required" });
+    if (!body?.trim())  return res.status(400).json({ error: "Body required" });
     const words = title.trim().split(/\s+/).filter(Boolean).length;
-    if (words > 20) return res.status(400).json({ error: "Title must be 20 words or fewer" });
-    if (story && story.length > 280) return res.status(400).json({ error: "Story must be 280 characters or fewer" });
+    if (words > 12) return res.status(400).json({ error: "Title must be 12 words or fewer" });
+
+    const safeImages = Array.isArray(images)
+      ? images.filter(u => typeof u === "string" && u.trim()).slice(0, 3).map(u => u.trim())
+      : [];
+    const safeLinks = Array.isArray(links)
+      ? links.filter(l => l?.platform && l?.url).slice(0, 3)
+          .map(l => ({ platform: String(l.platform).trim(), url: String(l.url).trim() }))
+      : [];
 
     const existing = await db.collection("dreams")
       .where("walletAddress", "==", req.user.walletAddress)
@@ -374,10 +382,11 @@ app.post("/api/dreams", auth, holder, async (req, res) => {
       username: user.username,
       profilePicUrl: user.profilePicUrl || "",
       title: title.trim(),
-      story: story?.trim()?.slice(0, 280) || "",
+      body: body.trim(),
+      images: safeImages,
+      links: safeLinks,
       mood: mood || "Serious",
-      proofImageUrl: proofImageUrl?.trim() || "",
-      proofLink: proofLink?.trim() || "",
+      commentCount: 0,
       state: "alive", beliefCount: 0, recentBeliefs: 0,
       roundId, isRetired: false, isDeleted: false, deleteCount: 0,
       titleLockedAt: Timestamp.fromMillis(Date.now() + 1800000),
