@@ -57,6 +57,32 @@ function fetchJSON(url, headers = {}) {
   });
 }
 
+function postJSON(url, headers = {}, body = {}) {
+  return new Promise((resolve, reject) => {
+    const payload = JSON.stringify(body);
+    const parsed  = new URL(url);
+    const opts = {
+      hostname: parsed.hostname,
+      path:     parsed.pathname + parsed.search,
+      method:   "POST",
+      headers: {
+        "Content-Type":   "application/json",
+        "Content-Length": Buffer.byteLength(payload),
+        ...headers,
+      },
+    };
+    const req = https.request(opts, res => {
+      let d = "";
+      res.on("data", c => d += c);
+      res.on("end", () => { try { resolve(JSON.parse(d)); } catch { reject(new Error("parse")); } });
+    });
+    req.on("error", reject);
+    req.setTimeout(15000, () => { req.destroy(); reject(new Error("timeout")); });
+    req.write(payload);
+    req.end();
+  });
+}
+
 async function getTokenPriceUSD() {
   try {
     const d = await fetchJSON(`https://data.solanatracker.io/price?token=${TOKEN_CA}`, { "x-api-key": ST_KEY });
@@ -280,6 +306,14 @@ app.get("/api/dreams/graveyard", async (req, res) => {
       .where("state", "in", ["grey", "resurrected"])
       .orderBy("updatedAt", "desc").limit(50).get();
     res.json({ dreams: snap.docs.map(d => ({ id: d.id, ...d.data() })) });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+app.get("/api/dreams/:id", async (req, res) => {
+  try {
+    const snap = await db.collection("dreams").doc(req.params.id).get();
+    if (!snap.exists) return res.status(404).json({ error: "Dream not found" });
+    res.json({ dream: { id: snap.id, ...snap.data() } });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
