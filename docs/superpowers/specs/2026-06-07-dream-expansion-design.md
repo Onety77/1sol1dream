@@ -79,6 +79,8 @@ In Firebase Console → Firestore → Indexes → Composite:
 - `dream_comments`: `dreamId ASC` · `createdAt ASC`
 - `dream_notifications`: `userId ASC` · `createdAt DESC`
 - `dream_notifications`: `userId ASC` · `read ASC`
+- `dream_beliefs_log`: `dreamId ASC` · `roundId ASC` — needed for Believers section query in DreamDetail
+- `dream_notifications`: `type ASC` · `dreamId ASC` — needed for rank-change deduplication check
 
 ---
 
@@ -155,9 +157,9 @@ State shape:
 
 Full card (non-compact) changes only:
 - If `dream.images?.[0]`: render as an absolutely-positioned `<img>` inside the art zone with `object-fit: cover`, `opacity: 0.15`, `filter: blur(8px)`, full width/height, `z-index: 0`. Content sits on `z-index: 1`.
-- In the art zone, below the title: render body preview — `(dream.body || '').slice(0, 80)` + ellipsis if longer. Faded small text (`fontSize: '0.46rem'`, `color: 'var(--text-3)'`).
+- In the art zone, below the title: render body preview — `(dream.body || '').slice(0, 80)` + ellipsis if longer. Faded small text (`fontSize: '0.75rem'`, `color: 'var(--text-3)'`).
 - Stats grid: replace the current "Rank" stat cell with a comment count cell (`💬 {dream.commentCount || 0}`) when `rank` prop is not provided; keep rank cell when rank IS provided. To fit both when rank exists, stack rank + comments in the same cell (small rank label + even smaller comment count below it).
-- Wrap the entire card `<div>` in `<Link to={/dreams/${dream.id}} style={{ textDecoration: 'none' }}>`. The profile link and boost/believe buttons inside use `e.stopPropagation()` (already in place for boost).
+- Wrap the entire card `<div>` in `<Link to={`/dreams/${dream.id}`} style={{ textDecoration: 'none' }}>`. The profile link and boost button already call `e.stopPropagation()`. The **Believe button must also explicitly call `e.stopPropagation()`** — without it, clicking Believe will navigate to the detail page instead of placing a belief.
 
 ### Task 8 — `src/pages/DreamDetail.jsx` (new)
 
