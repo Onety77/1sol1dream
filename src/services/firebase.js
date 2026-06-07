@@ -1,5 +1,6 @@
 import { initializeApp, getApps } from 'firebase/app';
 import { getFirestore, doc, collection, onSnapshot, query, where, orderBy, limit } from 'firebase/firestore';
+import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 
 // ── PASTE YOUR FIREBASE CONFIG HERE ─────────────────────────
 const firebaseConfig = {
@@ -58,4 +59,13 @@ export function listenComments(dreamId, cb) {
     limit(100)
   );
   return onSnapshot(q, s => cb(s.docs.map(d => ({ id: d.id, ...d.data() }))));
+}
+
+export async function uploadDreamImage(file) {
+  const fbApp = getApps().length ? getApps()[0] : initializeApp(firebaseConfig);
+  const storage = getStorage(fbApp);
+  const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+  const imageRef = ref(storage, `dream-images/${Date.now()}-${safeName}`);
+  await uploadBytes(imageRef, file);
+  return getDownloadURL(imageRef);
 }

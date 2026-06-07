@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import Modal from '../ui/Modal';
 import { dreams as dreamsApi } from '../../services/api';
+import { uploadDreamImage } from '../../services/firebase';
 
 const QUICK_PLATFORMS = ['X', 'Website', 'Instagram', 'TikTok', 'YouTube'];
 const EMPTY_LINKS = [{ platform: '', url: '' }, { platform: '', url: '' }, { platform: '', url: '' }];
@@ -13,13 +14,16 @@ const sectionLabel = {
 export default function PostDreamModal({ open, onClose, onPosted }) {
   const [form, setForm] = useState({
     body: '', title: '',
-    images: ['', '', ''],
     links: EMPTY_LINKS.map(l => ({ ...l })),
   });
+  const [imageFile,      setImageFile]      = useState(null);
+  const [imagePreview,   setImagePreview]   = useState('');
+  const [uploadProgress, setUploadProgress] = useState('');
   const [titleLoading,   setTitleLoading]   = useState(false);
   const [titleGenerated, setTitleGenerated] = useState(false);
   const [error,   setError]   = useState('');
   const [loading, setLoading] = useState(false);
+  const fileInputRef = useRef(null);
 
   const wordCount = form.title.trim() ? form.title.trim().split(/\s+/).filter(Boolean).length : 0;
 
@@ -42,24 +46,48 @@ export default function PostDreamModal({ open, onClose, onPosted }) {
     });
   };
 
+  const handleImageChange = e => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setImageFile(file);
+    setImagePreview(URL.createObjectURL(file));
+    setUploadProgress('');
+  };
+
+  const removeImage = () => {
+    setImageFile(null);
+    setImagePreview('');
+    setUploadProgress('');
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
   const handleSubmit = async e => {
     e.preventDefault();
     if (wordCount > 12) { setError('Title must be 12 words or fewer'); return; }
     setLoading(true); setError('');
     try {
+      let imageUrl = '';
+      if (imageFile) {
+        setUploadProgress('Uploading image…');
+        imageUrl = await uploadDreamImage(imageFile);
+        setUploadProgress('');
+      }
       const payload = {
         title:  form.title.trim(),
         body:   form.body.trim(),
-        images: form.images.filter(u => u.trim()),
+        images: imageUrl ? [imageUrl] : [],
         links:  form.links.filter(l => l.platform.trim() && l.url.trim()),
       };
       const result = await dreamsApi.post(payload);
       onPosted?.(result.dream);
       onClose();
-      setForm({ body: '', title: '', images: ['', '', ''], links: EMPTY_LINKS.map(l => ({ ...l })) });
+      setForm({ body: '', title: '', links: EMPTY_LINKS.map(l => ({ ...l })) });
+      setImageFile(null); setImagePreview(''); setUploadProgress('');
+      if (fileInputRef.current) fileInputRef.current.value = '';
       setTitleGenerated(false);
     } catch (err) {
-      setError(err.response?.data?.error || 'Failed to post dream');
+      setUploadProgress('');
+      setError(err.response?.data?.error || err.message || 'Failed to post dream');
     } finally { setLoading(false); }
   };
 
@@ -119,20 +147,84 @@ export default function PostDreamModal({ open, onClose, onPosted }) {
 
             <div>
               <label style={sectionLabel}>
-                Images <span style={{ color: 'var(--text-3)', fontWeight: 400, textTransform: 'none', letterSpacing: 0, fontSize: '0.72rem' }}>(optional — up to 3 URLs)</span>
+                Image <span style={{ color: 'var(--text-3)', fontWeight: 400, textTransform: 'none', letterSpacing: 0, fontSize: '0.72rem' }}>(optional)</span>
               </label>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                {form.images.map((url, i) => (
-                  <input key={i} className="input" placeholder={`Image URL ${i + 1}`}
-                    value={url}
-                    onChange={e => setForm(f => {
-                      const images = [...f.images];
-                      images[i] = e.target.value;
-                      return { ...f, images };
-                    })}
+
+              {/* Hidden file input */}
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                style={{ display: 'none' }}
+                onChange={handleImageChange}
+              />
+
+              {!imagePreview ? (
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  style={{
+                    width: '100%', padding: '28px 16px',
+                    border: '1.5px dashed rgba(255,255,255,0.12)',
+                    borderRadius: 'var(--r-md)',
+                    background: 'rgba(255,255,255,0.02)',
+                    color: 'var(--text-3)', fontSize: '0.82rem',
+                    cursor: 'pointer', display: 'flex', flexDirection: 'column',
+                    alignItems: 'center', gap: 8, transition: 'border-color 0.2s, background 0.2s',
+                  }}
+                  onMouseEnter={e => {
+                    e.currentTarget.style.borderColor = 'rgba(255,215,0,0.3)';
+                    e.currentTarget.style.background = 'rgba(255,215,0,0.04)';
+                  }}
+                  onMouseLeave={e => {
+                    e.currentTarget.style.borderColor = 'rgba(255,255,255,0.12)';
+                    e.currentTarget.style.background = 'rgba(255,255,255,0.02)';
+                  }}
+                >
+                  <span style={{ fontSize: '1.6rem', opacity: 0.5 }}>↑</span>
+                  <span>Click to upload an image</span>
+                  <span style={{ fontSize: '0.72rem', opacity: 0.6 }}>PNG, JPG, GIF, WEBP — max 5 MB</span>
+                </button>
+              ) : (
+                <div style={{ position: 'relative', borderRadius: 'var(--r-md)', overflow: 'hidden' }}>
+                  <img
+                    src={imagePreview}
+                    alt="preview"
+                    style={{ width: '100%', maxHeight: 180, objectFit: 'cover', display: 'block' }}
                   />
-                ))}
-              </div>
+                  <div style={{
+                    position: 'absolute', inset: 0,
+                    background: 'linear-gradient(to top, rgba(0,0,0,0.6) 0%, transparent 50%)',
+                    pointerEvents: 'none',
+                  }} />
+                  <div style={{
+                    position: 'absolute', bottom: 8, right: 8, display: 'flex', gap: 6,
+                  }}>
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      style={{
+                        padding: '4px 10px', borderRadius: 99, fontSize: '0.7rem', cursor: 'pointer',
+                        background: 'rgba(255,255,255,0.15)', border: '1px solid rgba(255,255,255,0.25)',
+                        color: '#fff', backdropFilter: 'blur(8px)',
+                      }}>Change</button>
+                    <button
+                      type="button"
+                      onClick={removeImage}
+                      style={{
+                        padding: '4px 10px', borderRadius: 99, fontSize: '0.7rem', cursor: 'pointer',
+                        background: 'rgba(255,31,90,0.3)', border: '1px solid rgba(255,31,90,0.4)',
+                        color: '#fff', backdropFilter: 'blur(8px)',
+                      }}>Remove</button>
+                  </div>
+                </div>
+              )}
+
+              {uploadProgress && (
+                <div style={{ fontSize: '0.75rem', color: 'var(--gold)', marginTop: 6, opacity: 0.8 }}>
+                  {uploadProgress}
+                </div>
+              )}
             </div>
 
             <div>
