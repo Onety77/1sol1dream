@@ -2,8 +2,6 @@
  * 1 SOL AND A DREAM — Server + Engine
  * Everything in one file. One Railway service.
  */
-require("./claimFees");
-
 require("dotenv").config();
 
 const express = require("express");
@@ -15,6 +13,7 @@ const { getFirestore, FieldValue, Timestamp } = require("firebase-admin/firestor
 const { Connection, PublicKey, Keypair, Transaction, SystemProgram, LAMPORTS_PER_SOL } = require("@solana/web3.js");
 const bs58  = require("bs58");
 const https = require("https");
+const { startAutoClaimFees } = require("./claimFees");
 
 // ── CONFIG ───────────────────────────────────────────────────
 const PORT           = process.env.PORT || 4000;
@@ -397,7 +396,7 @@ app.delete("/api/dreams/:id", auth, async (req, res) => {
 app.get("/api/beliefs/me", auth, async (req, res) => {
   try {
     const roundSnap = await db.doc("dream_stats/currentRound").get();
-    if (!roundSnap.exists) return res.json({ dreamIds: [], totalBeliefs: 0, remaining: FREE_BELIEFS, purchasedBeliefs: 0 });
+    if (!roundSnap.exists) return res.json({ beliefs: [], totalBeliefs: 0, remaining: FREE_BELIEFS, purchasedBeliefs: 0 });
     const { roundId } = roundSnap.data();
     const doc = await db.collection("dream_beliefs").doc(`${roundId}_${req.user.userId}`).get();
     if (!doc.exists) return res.json({ beliefs: [], totalBeliefs: 0, remaining: FREE_BELIEFS, purchasedBeliefs: 0 });
@@ -831,6 +830,7 @@ app.listen(PORT, () => {
   // Boot the engine
   roundTick();
   balanceTick();
+  startAutoClaimFees(connection, creatorKP, log);
 
   setInterval(roundTick,   10_000);
   setInterval(balanceTick, 15_000);

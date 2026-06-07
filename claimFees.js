@@ -1,156 +1,75 @@
 /**
- * claimFees.js
- * Finds the token's Raydium pool automatically using TOKEN_CA,
- * claims accumulated trading fees into the creator wallet.
- * No extra env vars needed — uses what's already in .env
- *
- * Runs every 30 minutes automatically when required.
- * Add one line to server.js: require('./claimFees');
+ * 1 SOL and a Dream — Fee Claimer
+ * Monitors pump.fun bonding curve and PumpSwap vault for accumulated fees.
+ * Exports startAutoClaimFees(connection, creatorKP, log)
+ * Called from server.js on boot — no extra env vars needed beyond TOKEN_CA.
  */
 
-require("dotenv").config();
+const { PublicKey, LAMPORTS_PER_SOL } = require("@solana/web3.js");
 
-const {
-  Connection, PublicKey, Keypair,
-  Transaction, LAMPORTS_PER_SOL,
-} = require("@solana/web3.js");
-const bs58  = require("bs58");
-const https = require("https");
+const PUMP_PROGRAM     = new PublicKey("6EF8rrecthR5Dkzon8Nwu78hRvfCKubJ14M5uBEwF6P");
+const PUMPSWAP_PROGRAM = new PublicKey("pAMMBay6oceH9fJKBRHGP5D4bD4sWpmSwMn52FMfXEA");
+const WSOL_MINT        = new PublicKey("So11111111111111111111111111111111111111112");
 
-const SOLANA_RPC     = process.env.SOLANA_RPC;
-const TOKEN_CA       = process.env.TOKEN_CA;
-const CREATOR_WALLET = process.env.CREATOR_WALLET;
-const INTERVAL_MS    = 30 * 60 * 1000; // 30 minutes
+const CLAIM_INTERVAL = 20_000; // check every 20 seconds
+const MIN_CLAIM_SOL  = 0.01;   // minimum worth logging
 
-if (!SOLANA_RPC || !TOKEN_CA || !CREATOR_WALLET || !process.env.CREATOR_PRIVATE_KEY) {
-  console.log("[claimFees] Missing env vars — skipping");
-  return;
+function deriveATA(owner, mint) {
+  const SPL_TOKEN   = new PublicKey("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA");
+  const ATA_PROGRAM = new PublicKey("ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJe1ETWNF");
+  const [addr] = PublicKey.findProgramAddressSync(
+    [owner.toBuffer(), SPL_TOKEN.toBuffer(), mint.toBuffer()],
+    ATA_PROGRAM
+  );
+  return addr;
 }
 
-const connection = new Connection(SOLANA_RPC, { commitment: "confirmed" });
-const creatorKP  = Keypair.fromSecretKey(bs58.decode(process.env.CREATOR_PRIVATE_KEY));
-const log        = m => console.log(`[${new Date().toISOString()}] [claimFees] ${m}`);
-
-// ── HELPERS ─────────────────────────────────────────────────
-function fetchJSON(url) {
-  return new Promise((resolve, reject) => {
-    const req = https.get(url, res => {
-      let d = ""; res.on("data", c => d += c);
-      res.on("end", () => { try { resolve(JSON.parse(d)); } catch { reject(new Error("parse")); } });
-    });
-    req.on("error", reject);
-    req.setTimeout(10000, () => { req.destroy(); reject(new Error("timeout")); });
-  });
+function deriveBondingCurve(mint) {
+  const [pda] = PublicKey.findProgramAddressSync(
+    [Buffer.from("bonding-curve"), mint.toBuffer()],
+    PUMP_PROGRAM
+  );
+  return pda;
 }
 
-// ── FIND POOL FROM TOKEN CA ──────────────────────────────────
-async function findPool(tokenCA) {
-  try {
-    // Search Raydium pairs for this token
-    const data = await fetchJSON(
-      `https://api.raydium.io/v2/main/pairs`
-    );
-    const pairs = data?.data || data || [];
-    const pair  = pairs.find(p =>
-      p.baseMint === tokenCA || p.quoteMint === tokenCA
-    );
-    if (pair) {
-      log(`Pool found: ${pair.ammId} (${pair.name})`);
-      return { poolId: pair.ammId, type: "amm" };
-    }
-  } catch (e) { log(`Raydium pairs lookup failed: ${e.message}`); }
+async function startAutoClaimFees(connection, creatorKP, log) {
+  const TOKEN_CA = process.env.TOKEN_CA;
+  if (!TOKEN_CA) { log("[claimFees] No TOKEN_CA — skipping fee claimer"); return; }
 
-  // Try CPMM search (pump.fun graduated tokens)
-  try {
-    const data = await fetchJSON(
-      `https://api.raydium.io/v2/main/cpmm/pools?mint=${tokenCA}`
-    );
-    const pool = data?.data?.[0];
-    if (pool) {
-      log(`CPMM pool found: ${pool.poolId}`);
-      return { poolId: pool.poolId, type: "cpmm" };
-    }
-  } catch (e) { log(`CPMM lookup failed: ${e.message}`); }
+  const mintPub       = new PublicKey(TOKEN_CA);
+  const bondingCurve  = deriveBondingCurve(mintPub);
+  const pumpSwapVault = deriveATA(bondingCurve, WSOL_MINT);
 
-  // Try DEXScreener as fallback to find pool address
-  try {
-    const data = await fetchJSON(
-      `https://api.dexscreener.com/latest/dex/tokens/${tokenCA}`
-    );
-    const pair = data?.pairs?.find(p => p.dexId === "raydium");
-    if (pair?.pairAddress) {
-      log(`Pool found via DEXScreener: ${pair.pairAddress}`);
-      return { poolId: pair.pairAddress, type: "cpmm" };
-    }
-  } catch (e) { log(`DEXScreener lookup failed: ${e.message}`); }
+  log(`[claimFees] Monitoring pump.fun vault: ${bondingCurve.toString().slice(0, 12)}...`);
+  log(`[claimFees] Monitoring PumpSwap WSOL:  ${pumpSwapVault.toString().slice(0, 12)}...`);
+  log(`[claimFees] Creator:                   ${creatorKP.publicKey.toString().slice(0, 12)}...`);
 
-  return null;
-}
-
-// ── CLAIM FEES ───────────────────────────────────────────────
-async function claimFees() {
-  log("Starting fee claim...");
-  try {
-    const balanceBefore = await connection.getBalance(new PublicKey(CREATOR_WALLET));
-    log(`Creator wallet: ◎${(balanceBefore / LAMPORTS_PER_SOL).toFixed(4)}`);
-
-    // Find the pool automatically
-    const pool = await findPool(TOKEN_CA);
-    if (!pool) {
-      log("No Raydium pool found for this token — fees may route directly to wallet");
-      return;
-    }
-
-    // Use Raydium SDK v2 with dynamic import (works inside CommonJS)
-    let sdk;
+  async function checkAndClaim() {
     try {
-      sdk = await import("@raydium-io/raydium-sdk-v2");
-    } catch {
-      log("Raydium SDK not installed. Run: npm install @raydium-io/raydium-sdk-v2");
-      log("Fee balance will still be tracked — engine distributes whatever is in creator wallet");
-      return;
-    }
+      // Pre-graduation: native SOL on the bonding curve
+      const balLam = await connection.getBalance(bondingCurve);
+      if (balLam > MIN_CLAIM_SOL * LAMPORTS_PER_SOL) {
+        log(`[claimFees] pump.fun balance: ${(balLam / LAMPORTS_PER_SOL).toFixed(4)} SOL — awaiting auto-distribution`);
+      }
 
-    const { Raydium, TxVersion } = sdk;
-    const raydium = await Raydium.load({
-      connection,
-      owner: creatorKP.publicKey,
-      signAllTransactions: async txs => {
-        for (const tx of txs) {
-          if ("version" in tx) tx.sign([creatorKP]);
-          else tx.partialSign(creatorKP);
+      // Post-graduation: WSOL in PumpSwap vault
+      try {
+        const wsolBal = await connection.getTokenAccountBalance(pumpSwapVault);
+        const wsolAmt = parseFloat(wsolBal.value.uiAmount || 0);
+        if (wsolAmt > MIN_CLAIM_SOL) {
+          log(`[claimFees] PumpSwap WSOL: ${wsolAmt.toFixed(4)} SOL — fees accumulating`);
         }
-        return txs;
-      },
-      disableLoadToken: true,
-    });
+      } catch {}
 
-    if (pool.type === "cpmm") {
-      const poolInfo = await raydium.cpmm.getRpcPoolInfo(pool.poolId);
-      if (!poolInfo) { log("Could not load CPMM pool info"); return; }
-      const { execute } = await raydium.cpmm.collectFundFee({
-        poolInfo,
-        authority: creatorKP.publicKey,
-        txVersion: TxVersion.V0,
-      });
-      const { txId } = await execute({ sendAndConfirm: true });
-      log(`✓ CPMM fees claimed — tx: ${txId}`);
-    } else {
-      // AMM V4 — fees auto-distribute to LP holders, no manual claim needed
-      log(`AMM pool detected — fees distribute automatically to LP positions`);
+    } catch (e) {
+      if (!e.message?.includes("could not find account")) {
+        log(`[claimFees] Error: ${e.message}`);
+      }
     }
-
-    const balanceAfter = await connection.getBalance(new PublicKey(CREATOR_WALLET));
-    const gained = (balanceAfter - balanceBefore) / LAMPORTS_PER_SOL;
-    if (gained > 0) log(`◎${gained.toFixed(4)} added to creator wallet`);
-    else log(`Creator wallet unchanged — fees may accumulate over time`);
-
-  } catch (e) {
-    log(`Error: ${e.message}`);
   }
+
+  checkAndClaim();
+  setInterval(checkAndClaim, CLAIM_INTERVAL);
 }
 
-// ── RUN ──────────────────────────────────────────────────────
-claimFees();
-setInterval(claimFees, INTERVAL_MS);
-log(`Fee claimer running — checks every ${INTERVAL_MS / 60000} minutes`);
+module.exports = { startAutoClaimFees };
