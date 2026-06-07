@@ -150,6 +150,14 @@ async function holder(req, res, next) {
   next();
 }
 
+async function notify(userId, type, data) {
+  try {
+    await db.collection("dream_notifications").doc().set({
+      userId, type, read: false, createdAt: Timestamp.now(), ...data,
+    });
+  } catch (e) { log(`[notify] error: ${e.message}`); }
+}
+
 // ══════════════════════════════════════════════════════════════
 // API ROUTES
 // ══════════════════════════════════════════════════════════════
@@ -590,6 +598,27 @@ app.get("/api/config", async (req, res) => {
         sixth:  costs.sixth  || 4000,
       },
     });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+app.get("/api/notifications", auth, async (req, res) => {
+  try {
+    const snap = await db.collection("dream_notifications")
+      .where("userId", "==", req.user.userId)
+      .orderBy("createdAt", "desc").limit(30).get();
+    res.json({ notifications: snap.docs.map(d => ({ id: d.id, ...d.data() })) });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+app.put("/api/notifications/read", auth, async (req, res) => {
+  try {
+    const snap = await db.collection("dream_notifications")
+      .where("userId", "==", req.user.userId)
+      .where("read", "==", false).get();
+    const batch = db.batch();
+    snap.docs.forEach(d => batch.update(d.ref, { read: true }));
+    await batch.commit();
+    res.json({ success: true });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
