@@ -28,7 +28,7 @@ const FREE_BELIEFS   = 3;
 const MAX_BELIEFS    = 6;
 const LOCK_MS        = 15 * 60 * 1000; // 15 minute belief lock
 
-["JWT_SECRET","SOLANA_RPC","TOKEN_CA","CREATOR_WALLET","CREATOR_PRIVATE_KEY","FIREBASE_SERVICE_ACCOUNT_JSON"].forEach(k => {
+["JWT_SECRET","SOLANA_RPC","TOKEN_CA","CREATOR_WALLET","CREATOR_PRIVATE_KEY","FIREBASE_SERVICE_ACCOUNT_JSON","ANTHROPIC_API"].forEach(k => {
   if (!process.env[k]) { console.error(`Missing env: ${k}`); process.exit(1); }
 });
 
