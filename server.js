@@ -317,6 +317,35 @@ app.get("/api/dreams/:id", async (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
+app.post("/api/dreams/generate-title", auth, async (req, res) => {
+  try {
+    const { dreamText } = req.body;
+    if (!dreamText?.trim()) return res.status(400).json({ error: "dreamText required" });
+
+    const result = await postJSON(
+      "https://api.anthropic.com/v1/messages",
+      {
+        "x-api-key":          process.env.ANTHROPIC_API,
+        "anthropic-version":  "2023-06-01",
+      },
+      {
+        model:      "claude-haiku-4-5-20251001",
+        max_tokens: 50,
+        messages: [{
+          role:    "user",
+          content: `Generate a short poetic title (maximum 8 words, no quotes, no punctuation at the end) that captures the soul of this dream:\n\n${dreamText.slice(0, 2000)}`,
+        }],
+      }
+    );
+
+    const title = result?.content?.[0]?.text?.trim() || "A Dream Worth Believing";
+    res.json({ title });
+  } catch (e) {
+    log(`[generate-title] error: ${e.message}`);
+    res.status(500).json({ error: "Failed to generate title" });
+  }
+});
+
 app.post("/api/dreams", auth, holder, async (req, res) => {
   try {
     const { title, story, mood, proofImageUrl, proofLink } = req.body;
