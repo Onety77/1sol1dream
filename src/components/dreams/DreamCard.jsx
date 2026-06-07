@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { beliefs as beliefApi } from '../../services/api';
 import { useAuthStore } from '../../store/authStore';
 import { useState } from 'react';
@@ -129,6 +129,7 @@ export default function DreamCard({ dream, myBeliefs = [], onBelief, rank, compa
   const [believed, setBelieved]   = useState(myBeliefs.includes(dream.id));
   const [hovered, setHovered]     = useState(false);
   const [boostOpen, setBoostOpen] = useState(false);
+  const navigate = useNavigate();
 
   if (compact) {
     return <CompactCard dream={dream} myBeliefs={myBeliefs} onBelief={onBelief} rank={rank} />;
@@ -168,6 +169,7 @@ export default function DreamCard({ dream, myBeliefs = [], onBelief, rank, compa
     <div
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
+      onClick={() => navigate(`/dreams/${dream.id}`)}
       style={{
         position: 'relative',
         width: '100%',
@@ -255,11 +257,23 @@ export default function DreamCard({ dream, myBeliefs = [], onBelief, rank, compa
             padding: '14px 10px', textAlign: 'center',
             marginBottom: 10, position: 'relative', overflow: 'hidden',
           }}>
+            {dream.images?.[0] && (
+              <img
+                src={dream.images[0]} alt=""
+                style={{
+                  position: 'absolute', inset: 0, width: '100%', height: '100%',
+                  objectFit: 'cover', opacity: 0.15, filter: 'blur(8px)',
+                  borderRadius: 10, zIndex: 0,
+                }}
+              />
+            )}
+
             {/* Mood icon */}
             <div style={{
               fontSize: '1.9rem', marginBottom: 10,
               animation: isGrey ? 'none' : 'icon-float-card 3s ease-in-out infinite',
               filter: `drop-shadow(0 0 10px rgba(${meta.rgb},${isGrey ? 0 : 0.55}))`,
+              position: 'relative', zIndex: 1,
             }}>
               {MOOD_EMOJI[dream.mood] || '✨'}
             </div>
@@ -273,7 +287,20 @@ export default function DreamCard({ dream, myBeliefs = [], onBelief, rank, compa
               marginBottom: 8,
               display: '-webkit-box', WebkitLineClamp: 4,
               WebkitBoxOrient: 'vertical', overflow: 'hidden',
+              position: 'relative', zIndex: 1,
             }}>{dream.title}</h3>
+
+            {(dream.body || '').length > 0 && (
+              <p style={{
+                fontSize: '0.75rem', color: 'var(--text-3)', lineHeight: 1.4,
+                marginBottom: 6, marginTop: -4,
+                display: '-webkit-box', WebkitLineClamp: 2,
+                WebkitBoxOrient: 'vertical', overflow: 'hidden',
+                position: 'relative', zIndex: 1,
+              }}>
+                {(dream.body || '').slice(0, 80)}{(dream.body || '').length > 80 ? '…' : ''}
+              </p>
+            )}
 
             {/* Mood badge */}
             <span style={{
@@ -283,6 +310,7 @@ export default function DreamCard({ dream, myBeliefs = [], onBelief, rank, compa
               textTransform: 'uppercase',
               background: meta.bg, border: `1px solid ${meta.border}`,
               color: meta.color,
+              position: 'relative', zIndex: 1,
             }}>
               {dream.mood}
             </span>
@@ -327,20 +355,36 @@ export default function DreamCard({ dream, myBeliefs = [], onBelief, rank, compa
             </div>
             <div style={{ background: 'rgba(255,255,255,0.06)' }} />
 
-            {/* Rank or proof */}
+            {/* Rank or Comments */}
             <div style={{ padding: '7px 4px', textAlign: 'center' }}>
-              <div style={{
-                fontFamily: 'var(--font-display)', fontWeight: 900,
-                fontSize: rank ? '0.82rem' : '0.6rem', lineHeight: 1,
-                color: rankLabel ? rankColor : 'var(--text-3)',
-              }}>
-                {rankLabel || '—'}
-              </div>
-              <div style={{
-                fontFamily: 'var(--font-mono)', fontSize: '0.38rem',
-                letterSpacing: '0.1em', color: 'var(--text-3)',
-                marginTop: 2, textTransform: 'uppercase',
-              }}>Rank</div>
+              {rank ? (
+                <>
+                  <div style={{
+                    fontFamily: 'var(--font-display)', fontWeight: 900,
+                    fontSize: '0.82rem', lineHeight: 1,
+                    color: rankLabel ? rankColor : 'var(--text-3)',
+                  }}>
+                    {rankLabel || '—'}
+                  </div>
+                  <div style={{
+                    fontFamily: 'var(--font-mono)', fontSize: '0.38rem',
+                    letterSpacing: '0.1em', color: 'var(--text-3)',
+                    marginTop: 2, textTransform: 'uppercase',
+                  }}>Rank</div>
+                </>
+              ) : (
+                <>
+                  <div style={{
+                    fontFamily: 'var(--font-display)', fontWeight: 900,
+                    fontSize: '0.8rem', lineHeight: 1, color: 'var(--text-2)',
+                  }}>💬 {dream.commentCount || 0}</div>
+                  <div style={{
+                    fontFamily: 'var(--font-mono)', fontSize: '0.38rem',
+                    letterSpacing: '0.1em', color: 'var(--text-3)',
+                    marginTop: 2, textTransform: 'uppercase',
+                  }}>Comments</div>
+                </>
+              )}
             </div>
           </div>
 
@@ -386,7 +430,7 @@ export default function DreamCard({ dream, myBeliefs = [], onBelief, rank, compa
             {/* Believe button or status */}
             {canBelieve && (
               <button
-                onClick={handleBelieve} disabled={loading}
+                onClick={e => { e.stopPropagation(); handleBelieve(e); }} disabled={loading}
                 style={{
                   padding: '4px 10px', borderRadius: 99, flexShrink: 0,
                   background: `rgba(${meta.rgb},0.1)`,
