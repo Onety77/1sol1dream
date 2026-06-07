@@ -30,13 +30,17 @@ export const auth = {
 };
 
 export const dreams = {
-  list:      (params) => api.get('/api/dreams', { params }).then(r => r.data),
-  top:       ()       => api.get('/api/dreams/top').then(r => r.data),
-  hall:      ()       => api.get('/api/dreams/hall').then(r => r.data),
-  graveyard: ()       => api.get('/api/dreams/graveyard').then(r => r.data),
-  post:      (data)   => api.post('/api/dreams', data).then(r => r.data),
-  edit:      (id, data) => api.put(`/api/dreams/${id}`, data).then(r => r.data),
-  delete:    (id)     => api.delete(`/api/dreams/${id}`).then(r => r.data),
+  list:          (params)         => api.get('/api/dreams', { params }).then(r => r.data),
+  top:           ()               => api.get('/api/dreams/top').then(r => r.data),
+  hall:          ()               => api.get('/api/dreams/hall').then(r => r.data),
+  graveyard:     ()               => api.get('/api/dreams/graveyard').then(r => r.data),
+  get:           (id)             => api.get(`/api/dreams/${id}`).then(r => r.data),
+  post:          (data)           => api.post('/api/dreams', data).then(r => r.data),
+  edit:          (id, data)       => api.put(`/api/dreams/${id}`, data).then(r => r.data),
+  delete:        (id)             => api.delete(`/api/dreams/${id}`).then(r => r.data),
+  generateTitle: (dreamText)      => api.post('/api/dreams/generate-title', { dreamText }).then(r => r.data),
+  getComments:   (dreamId)        => api.get(`/api/dreams/${dreamId}/comments`).then(r => r.data),
+  postComment:   (dreamId, text)  => api.post(`/api/dreams/${dreamId}/comments`, { text }).then(r => r.data),
 };
 
 export const beliefs = {
@@ -56,6 +60,11 @@ export const wallet = {
 
 export const config = {
   get: () => api.get('/api/config').then(r => r.data),
+};
+
+export const notifications = {
+  get:      () => api.get('/api/notifications').then(r => r.data),
+  markRead: () => api.put('/api/notifications/read').then(r => r.data),
 };
 
 export default api;

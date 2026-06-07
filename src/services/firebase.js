@@ -49,3 +49,13 @@ export function listenDream(dreamId, cb) {
   const ref = doc(init(), 'dreams', dreamId);
   return onSnapshot(ref, s => cb(s.exists() ? { id: s.id, ...s.data() } : null));
 }
+
+export function listenComments(dreamId, cb) {
+  const q = query(
+    collection(init(), 'dream_comments'),
+    where('dreamId', '==', dreamId),
+    orderBy('createdAt', 'asc'),
+    limit(100)
+  );
+  return onSnapshot(q, s => cb(s.docs.map(d => ({ id: d.id, ...d.data() }))));
+}
