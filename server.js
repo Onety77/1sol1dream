@@ -408,20 +408,29 @@ app.put("/api/dreams/:id", auth, async (req, res) => {
     if (dream.userId !== req.user.userId) return res.status(403).json({ error: "Not your dream" });
     if (dream.isDeleted) return res.status(400).json({ error: "Dream is deleted" });
 
-    const { title, story, mood, proofImageUrl, proofLink } = req.body;
+    const { title, body, mood, images, links } = req.body;
     const updates = { updatedAt: Timestamp.now() };
 
     if (title !== undefined) {
       const locked = dream.titleLockedAt?.toMillis?.() || 0;
       if (Date.now() > locked) return res.status(400).json({ error: "Title is locked after 30 minutes" });
       const words = title.trim().split(/\s+/).filter(Boolean).length;
-      if (words > 20) return res.status(400).json({ error: "Max 20 words" });
+      if (words > 12) return res.status(400).json({ error: "Max 12 words" });
       updates.title = title.trim();
     }
-    if (story !== undefined)        updates.story        = story.trim().slice(0, 280);
-    if (mood !== undefined)         updates.mood         = mood;
-    if (proofImageUrl !== undefined) updates.proofImageUrl = proofImageUrl;
-    if (proofLink !== undefined)    updates.proofLink    = proofLink;
+    if (body !== undefined) updates.body = body.trim();
+    if (mood !== undefined) updates.mood = mood;
+    if (images !== undefined) {
+      updates.images = Array.isArray(images)
+        ? images.filter(u => typeof u === "string" && u.trim()).slice(0, 3).map(u => u.trim())
+        : [];
+    }
+    if (links !== undefined) {
+      updates.links = Array.isArray(links)
+        ? links.filter(l => l?.platform && l?.url).slice(0, 3)
+            .map(l => ({ platform: String(l.platform).trim(), url: String(l.url).trim() }))
+        : [];
+    }
 
     await snap.ref.update(updates);
     res.json({ success: true });
