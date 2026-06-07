@@ -28,7 +28,7 @@ const FREE_BELIEFS   = 3;
 const MAX_BELIEFS    = 6;
 const LOCK_MS        = 15 * 60 * 1000; // 15 minute belief lock
 
-["JWT_SECRET","SOLANA_RPC","TOKEN_CA","CREATOR_WALLET","CREATOR_PRIVATE_KEY","FIREBASE_SERVICE_ACCOUNT_JSON","ANTHROPIC_API"].forEach(k => {
+["JWT_SECRET","SOLANA_RPC","TOKEN_CA","CREATOR_WALLET","CREATOR_PRIVATE_KEY","FIREBASE_SERVICE_ACCOUNT_JSON","GEMINI_API"].forEach(k => {
   if (!process.env[k]) { console.error(`Missing env: ${k}`); process.exit(1); }
 });
 
@@ -331,26 +331,23 @@ app.post("/api/dreams/generate-title", auth, async (req, res) => {
     if (!dreamText?.trim()) return res.status(400).json({ error: "dreamText required" });
 
     const result = await postJSON(
-      "https://api.anthropic.com/v1/messages",
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${process.env.GEMINI_API}`,
+      {},
       {
-        "x-api-key":          process.env.ANTHROPIC_API,
-        "anthropic-version":  "2023-06-01",
-      },
-      {
-        model:      "claude-haiku-4-5-20251001",
-        max_tokens: 50,
-        messages: [{
-          role:    "user",
-          content: `Generate a short poetic title (maximum 8 words, no quotes, no punctuation at the end) that captures the soul of this dream:\n\n${dreamText.slice(0, 2000)}`,
+        contents: [{
+          parts: [{
+            text: `Generate a short poetic title (maximum 8 words, no quotes, no punctuation at the end) that captures the soul of this dream:\n\n${dreamText.slice(0, 2000)}`,
+          }],
         }],
+        generationConfig: { maxOutputTokens: 50, temperature: 0.9 },
       }
     );
 
     if (result?.error) {
-      log(`[generate-title] Anthropic error: ${JSON.stringify(result.error)}`);
-      return res.status(500).json({ error: result.error.message || "Anthropic API error" });
+      log(`[generate-title] Gemini error: ${JSON.stringify(result.error)}`);
+      return res.status(500).json({ error: result.error.message || "Gemini API error" });
     }
-    const title = result?.content?.[0]?.text?.trim();
+    const title = result?.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
     if (!title) {
       log(`[generate-title] unexpected response: ${JSON.stringify(result)}`);
       return res.status(500).json({ error: "Failed to generate title" });
