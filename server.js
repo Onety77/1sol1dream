@@ -346,7 +346,15 @@ app.post("/api/dreams/generate-title", auth, async (req, res) => {
       }
     );
 
-    const title = result?.content?.[0]?.text?.trim() || "A Dream Worth Believing";
+    if (result?.error) {
+      log(`[generate-title] Anthropic error: ${JSON.stringify(result.error)}`);
+      return res.status(500).json({ error: result.error.message || "Anthropic API error" });
+    }
+    const title = result?.content?.[0]?.text?.trim();
+    if (!title) {
+      log(`[generate-title] unexpected response: ${JSON.stringify(result)}`);
+      return res.status(500).json({ error: "Failed to generate title" });
+    }
     res.json({ title });
   } catch (e) {
     log(`[generate-title] error: ${e.message}`);
@@ -393,7 +401,7 @@ app.post("/api/dreams", auth, holder, async (req, res) => {
       body: body.trim(),
       images: safeImages,
       links: safeLinks,
-      mood: mood || "Serious",
+      mood: mood || null,
       commentCount: 0,
       state: "alive", beliefCount: 0, recentBeliefs: 0,
       roundId, isRetired: false, isDeleted: false, deleteCount: 0,
