@@ -9,6 +9,7 @@ import WishingWell from './pages/WishingWell';
 import Profile from './pages/Profile';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
+import DreamDetail from './pages/DreamDetail';
 import { useAuthStore } from './store/authStore';
 import { useEffect } from 'react';
 
@@ -28,6 +29,7 @@ export default function App() {
         <Route path="/profile/:wallet" element={<Profile />} />
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
+        <Route path="/dreams/:id" element={<DreamDetail />} />
       </Route>
     </Routes>
   );
