@@ -411,10 +411,13 @@ img { max-width: 100%; display: block; }
 
 @media (max-width: 767px) {
   .modal-overlay {
-    top: 64px;   /* below fixed navbar */
+    top: 64px;    /* below fixed navbar */
     bottom: 60px; /* above fixed bottom nav */
     left: 0; right: 0;
   }
+
+  /* push round widget above the bottom nav */
+  :root { --widget-bottom: 72px; }
 
   .container, .container-wide { padding: 0 16px; }
 

@@ -48,20 +48,21 @@ export default function BoostModal({ open, onClose, dream }) {
 
   return (
     <div
+      className="modal-overlay"
       onClick={onClose}
       style={{
-        position: 'fixed', inset: 0, zIndex: 500,
         background: 'rgba(0,0,0,0.75)',
         backdropFilter: 'blur(8px)',
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        display: 'flex', alignItems: 'flex-start', justifyContent: 'center',
         padding: '20px 16px',
+        overflowY: 'auto',
         animation: 'scale-in 0.2s ease-out',
       }}
     >
       <div
         onClick={e => e.stopPropagation()}
         style={{
-          width: '100%', maxWidth: 480,
+          width: '100%', maxWidth: 480, margin: 'auto',
           background: 'rgba(8,6,20,0.98)',
           border: '1px solid rgba(255,255,255,0.1)',
           borderRadius: 'var(--r-xl)',

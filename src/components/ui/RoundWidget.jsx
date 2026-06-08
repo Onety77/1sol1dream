@@ -56,7 +56,7 @@ export default function RoundWidget() {
       className="round-widget-anchor"
       style={{
         position: 'fixed',
-        bottom: 28,
+        bottom: 'var(--widget-bottom, 28px)',
         right: 20,
         zIndex: 150,
         textDecoration: 'none',
