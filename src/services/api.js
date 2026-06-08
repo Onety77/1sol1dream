@@ -39,6 +39,17 @@ export const dreams = {
   edit:          (id, data)       => api.put(`/api/dreams/${id}`, data).then(r => r.data),
   delete:        (id)             => api.delete(`/api/dreams/${id}`).then(r => r.data),
   generateTitle: (dreamText)      => api.post('/api/dreams/generate-title', { dreamText }).then(r => r.data),
+  uploadImage:   (file)           => new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const base64 = reader.result.split(',')[1];
+      api.post('/api/dreams/upload-image', { data: base64, contentType: file.type, filename: file.name })
+        .then(r => resolve(r.data.url))
+        .catch(reject);
+    };
+    reader.onerror = () => reject(new Error('Failed to read file'));
+    reader.readAsDataURL(file);
+  }),
   getComments:   (dreamId)        => api.get(`/api/dreams/${dreamId}/comments`).then(r => r.data),
   postComment:   (dreamId, text)  => api.post(`/api/dreams/${dreamId}/comments`, { text }).then(r => r.data),
 };

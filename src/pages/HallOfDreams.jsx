@@ -10,9 +10,16 @@ const PLACE_COLORS = { 1: 'var(--crowned)', 2: '#C0C0D0', 3: '#CD7F32' };
 const PLACE_RGB = { 1: '255,215,0', 2: '200,200,224', 3: '205,127,50' };
 
 function WinnerCard({ winner, i }) {
-  const wonAt = winner.wonAt?.seconds
-    ? new Date(winner.wonAt.seconds * 1000)
-    : winner.wonAt?.toDate ? winner.wonAt.toDate() : new Date(winner.wonAt || Date.now());
+  const wonAt = (() => {
+    const w = winner.wonAt;
+    try {
+      if (w?.seconds)  return new Date(w.seconds * 1000);
+      if (w?._seconds) return new Date(w._seconds * 1000);
+      if (w?.toDate)   return w.toDate();
+      if (w)           return new Date(w);
+    } catch { /* fall through */ }
+    return new Date();
+  })();
   const isChampion = winner.place === 1;
   const placeColor = PLACE_COLORS[winner.place] || 'var(--text-2)';
   const placeRgb   = PLACE_RGB[winner.place] || '255,255,255';
@@ -143,7 +150,7 @@ function WinnerCard({ winner, i }) {
       </div>
 
       <p style={{ fontSize: '0.62rem', color: 'var(--text-3)', fontFamily: 'var(--font-mono)', zIndex: 1 }}>
-        {formatDistanceToNow(wonAt, { addSuffix: true })}
+        {(() => { try { return formatDistanceToNow(wonAt, { addSuffix: true }); } catch { return 'some time ago'; } })()}
       </p>
     </div>
   );

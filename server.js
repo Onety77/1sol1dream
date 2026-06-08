@@ -10,6 +10,7 @@ const bcrypt  = require("bcryptjs");
 const jwt     = require("jsonwebtoken");
 const { initializeApp, cert }    = require("firebase-admin/app");
 const { getFirestore, FieldValue, Timestamp } = require("firebase-admin/firestore");
+const { getStorage }             = require("firebase-admin/storage");
 const { Connection, PublicKey, Keypair, Transaction, SystemProgram, LAMPORTS_PER_SOL } = require("@solana/web3.js");
 const bs58  = require("bs58");
 const https = require("https");
@@ -33,13 +34,17 @@ const LOCK_MS        = 15 * 60 * 1000; // 15 minute belief lock
 });
 
 // ── INIT ─────────────────────────────────────────────────────
-initializeApp({ credential: cert(JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_JSON)) });
+const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_JSON);
+initializeApp({
+  credential:    cert(serviceAccount),
+  storageBucket: `${serviceAccount.project_id}.firebasestorage.app`,
+});
 const db         = getFirestore();
 const connection = new Connection(SOLANA_RPC, { commitment: "confirmed" });
 const creatorKP  = Keypair.fromSecretKey(bs58.decode(process.env.CREATOR_PRIVATE_KEY));
 const app        = express();
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: "10mb" }));
 
 const log   = m => console.log(`[${new Date().toISOString()}] ${m}`);
 const sleep = ms => new Promise(r => setTimeout(r, ms));
@@ -399,6 +404,30 @@ app.post("/api/dreams/generate-title", auth, async (req, res) => {
   } catch (e) {
     log(`[generate-title] error: ${e.message}`);
     res.status(500).json({ error: "Failed to generate title" });
+  }
+});
+
+app.post("/api/dreams/upload-image", auth, async (req, res) => {
+  try {
+    const { data, contentType, filename } = req.body;
+    if (!data || !contentType) return res.status(400).json({ error: "data and contentType required" });
+
+    const buffer = Buffer.from(data, "base64");
+    if (buffer.length > 5 * 1024 * 1024) return res.status(400).json({ error: "Image too large (max 5MB)" });
+
+    const safeName = (filename || "image").replace(/[^a-zA-Z0-9._-]/g, "_");
+    const filePath = `dream-images/${Date.now()}-${safeName}`;
+    const file = getStorage().bucket().file(filePath);
+
+    await file.save(buffer, { metadata: { contentType }, resumable: false });
+    await file.makePublic();
+
+    const url = `https://storage.googleapis.com/${getStorage().bucket().name}/${filePath}`;
+    log(`[upload-image] ${filePath}`);
+    res.json({ url });
+  } catch (e) {
+    log(`[upload-image] error: ${e.message}`);
+    res.status(500).json({ error: "Failed to upload image: " + e.message });
   }
 });
 

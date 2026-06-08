@@ -1,7 +1,6 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import Modal from '../ui/Modal';
 import { dreams as dreamsApi } from '../../services/api';
-import { uploadDreamImage } from '../../services/firebase';
 
 const QUICK_PLATFORMS = ['X', 'Website', 'Instagram', 'TikTok', 'YouTube'];
 const EMPTY_LINKS = [{ platform: '', url: '' }, { platform: '', url: '' }, { platform: '', url: '' }];
@@ -24,6 +23,15 @@ export default function PostDreamModal({ open, onClose, onPosted }) {
   const [error,   setError]   = useState('');
   const [loading, setLoading] = useState(false);
   const fileInputRef = useRef(null);
+
+  // Reset stuck states whenever the modal is closed
+  useEffect(() => {
+    if (!open) {
+      setLoading(false);
+      setUploadProgress('');
+      setError('');
+    }
+  }, [open]);
 
   const wordCount = form.title.trim() ? form.title.trim().split(/\s+/).filter(Boolean).length : 0;
 
@@ -69,7 +77,7 @@ export default function PostDreamModal({ open, onClose, onPosted }) {
       let imageUrl = '';
       if (imageFile) {
         setUploadProgress('Uploading image…');
-        imageUrl = await uploadDreamImage(imageFile);
+        imageUrl = await dreamsApi.uploadImage(imageFile);
         setUploadProgress('');
       }
       const payload = {
