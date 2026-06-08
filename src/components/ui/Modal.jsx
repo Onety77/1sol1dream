@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 
-export default function Modal({ open, onClose, title, children, maxWidth = 540 }) {
+export default function Modal({ open, onClose, title, children, maxWidth = 540, footer }) {
   useEffect(() => {
     if (!open) return;
     const h = e => { if (e.key === 'Escape') onClose(); };
@@ -77,6 +77,18 @@ export default function Modal({ open, onClose, title, children, maxWidth = 540 }
         }}>
           {children}
         </div>
+
+        {/* Sticky footer (optional) */}
+        {footer && (
+          <div style={{
+            flexShrink: 0,
+            padding: 'clamp(14px, 2vw, 18px) clamp(22px, 4vw, 32px)',
+            borderTop: '1px solid rgba(255,255,255,0.06)',
+            background: 'rgba(8,0,20,0.98)',
+          }}>
+            {footer}
+          </div>
+        )}
       </div>
     </div>
   );

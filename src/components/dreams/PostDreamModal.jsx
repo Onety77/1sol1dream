@@ -91,9 +91,27 @@ export default function PostDreamModal({ open, onClose, onPosted }) {
     } finally { setLoading(false); }
   };
 
+  const footerContent = (
+    <>
+      {error && (
+        <div style={{
+          background: 'rgba(255,31,90,0.08)', border: '1px solid rgba(255,31,90,0.25)',
+          borderRadius: 'var(--r-md)', padding: '10px 14px',
+          fontSize: '0.82rem', color: 'var(--fading)', marginBottom: 12,
+        }}>{error}</div>
+      )}
+      <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
+        <button type="button" className="btn btn-ghost" onClick={onClose}>Cancel</button>
+        <button type="submit" form="post-dream-form" className="btn btn-primary" disabled={loading}>
+          {loading ? 'Posting...' : 'Post My Dream'}
+        </button>
+      </div>
+    </>
+  );
+
   return (
-    <Modal open={open} onClose={onClose} title="Post Your Dream" maxWidth={760}>
-      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
+    <Modal open={open} onClose={onClose} title="Post Your Dream" maxWidth={760} footer={footerContent}>
+      <form id="post-dream-form" onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
 
         {/* ── Two-column grid — collapses to one on narrow screens ── */}
         <div style={{
@@ -270,25 +288,6 @@ export default function PostDreamModal({ open, onClose, onPosted }) {
           </div>
         </div>
 
-        {/* ── Divider ── */}
-        <div style={{ height: 1, background: 'rgba(255,255,255,0.06)', margin: '4px 0 20px' }} />
-
-        {/* ── Error ── */}
-        {error && (
-          <div style={{
-            background: 'rgba(255,31,90,0.08)', border: '1px solid rgba(255,31,90,0.25)',
-            borderRadius: 'var(--r-md)', padding: '10px 14px',
-            fontSize: '0.82rem', color: 'var(--fading)', marginBottom: 16,
-          }}>{error}</div>
-        )}
-
-        {/* ── Actions ── */}
-        <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
-          <button type="button" className="btn btn-ghost" onClick={onClose}>Cancel</button>
-          <button type="submit" className="btn btn-primary" disabled={loading}>
-            {loading ? 'Posting...' : 'Post My Dream'}
-          </button>
-        </div>
       </form>
     </Modal>
   );
