@@ -19,7 +19,9 @@ export default function Modal({ open, onClose, title, children, maxWidth = 540 }
         background: 'rgba(0,0,8,0.85)',
         backdropFilter: 'blur(20px) saturate(140%)',
         WebkitBackdropFilter: 'blur(20px) saturate(140%)',
-        display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20,
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        padding: 'clamp(8px, 3vw, 20px)',
+        paddingBottom: 'max(clamp(8px, 3vw, 20px), env(safe-area-inset-bottom))',
       }}
     >
       <div
@@ -29,7 +31,7 @@ export default function Modal({ open, onClose, title, children, maxWidth = 540 }
           border: '1px solid rgba(255,255,255,0.1)',
           borderRadius: 'var(--r-xl)',
           width: '100%', maxWidth,
-          maxHeight: 'calc(100vh - 40px)',
+          maxHeight: 'calc(100dvh - 40px)',
           display: 'flex', flexDirection: 'column',
           boxShadow: '0 0 0 1px rgba(255,255,255,0.04), 0 40px 120px rgba(0,0,0,0.9)',
           animation: 'scale-in 0.28s cubic-bezier(0.34,1.56,0.64,1)',
