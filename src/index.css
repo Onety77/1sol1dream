@@ -399,10 +399,23 @@ img { max-width: 100%; display: block; }
   .navbar-round-pill { display: none !important; }
 }
 
+/* ── Modal overlay positioning ─────────────────────────────────────── */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+}
+
 /* ── Mobile bottom nav ─────────────────────────────────────────────── */
 .bottom-nav { display: none; }
 
 @media (max-width: 767px) {
+  .modal-overlay {
+    top: 64px;   /* below fixed navbar */
+    bottom: 60px; /* above fixed bottom nav */
+    left: 0; right: 0;
+  }
+
   .container, .container-wide { padding: 0 16px; }
 
   .bottom-nav {

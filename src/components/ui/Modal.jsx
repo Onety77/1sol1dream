@@ -13,17 +13,15 @@ export default function Modal({ open, onClose, title, children, maxWidth = 540, 
 
   return (
     <div
+      className="modal-overlay"
       onClick={onClose}
       style={{
-        position: 'fixed', inset: 0, zIndex: 1000,
         background: 'rgba(0,0,8,0.85)',
         backdropFilter: 'blur(20px) saturate(140%)',
         WebkitBackdropFilter: 'blur(20px) saturate(140%)',
-        /* overlay scrolls as fallback — flex-start so content is never cut off at top */
         overflowY: 'auto',
         display: 'flex', alignItems: 'flex-start', justifyContent: 'center',
-        padding: 'clamp(8px, 3vw, 20px)',
-        paddingBottom: 'max(clamp(8px, 3vw, 20px), env(safe-area-inset-bottom))',
+        padding: 'clamp(8px, 3vw, 16px)',
       }}
     >
       <div
@@ -33,8 +31,7 @@ export default function Modal({ open, onClose, title, children, maxWidth = 540, 
           border: '1px solid rgba(255,255,255,0.1)',
           borderRadius: 'var(--r-xl)',
           width: '100%', maxWidth,
-          /* svh = small viewport height — always excludes browser chrome + nav bar */
-          maxHeight: 'calc(100svh - 40px)',
+          maxHeight: 'calc(100% - clamp(16px, 3vw, 32px))',
           margin: 'auto',
           display: 'flex', flexDirection: 'column',
           boxShadow: '0 0 0 1px rgba(255,255,255,0.04), 0 40px 120px rgba(0,0,0,0.9)',
