@@ -44,6 +44,24 @@ app.use(express.json());
 const log   = m => console.log(`[${new Date().toISOString()}] ${m}`);
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 
+function apiError(res, label, e, fallback = "Internal server error") {
+  const message = e?.message || fallback;
+  const code    = e?.code || e?.status || null;
+
+  log(`[${label}] ERROR: ${message}`);
+
+  // Keep this. Firestore missing-index errors often include the exact
+  // Firebase Console link inside the full error object / stack. Railway
+  // will show it in Deploy Logs so you can click or copy it.
+  console.error(e);
+
+  return res.status(500).json({
+    error: message,
+    code,
+    details: e?.details || null,
+  });
+}
+
 // ── SOLANA ───────────────────────────────────────────────────
 function fetchJSON(url, headers = {}) {
   return new Promise((resolve, reject) => {
@@ -279,25 +297,46 @@ app.put("/api/profile", auth, async (req, res) => {
 // ── Dreams ───────────────────────────────────────────────────
 app.get("/api/dreams", async (req, res) => {
   try {
-    const { filter, limit: lim = 50 } = req.query;
-    let q = db.collection("dreams").where("isDeleted", "==", false).where("isRetired", "==", false);
-    if (filter === "faded")    q = q.where("state", "in", ["grey", "resurrected"]).orderBy("beliefCount", "desc");
-    else if (filter === "new") q = q.orderBy("createdAt", "desc");
-    else if (filter === "rising") q = q.orderBy("recentBeliefs", "desc");
-    else q = q.orderBy("beliefCount", "desc");
-    const snap = await q.limit(parseInt(lim)).get();
+    const { filter = "top", limit: lim = 50 } = req.query;
+    const safeLimit = Math.min(Math.max(parseInt(lim, 10) || 50, 1), 100);
+
+    let q = db.collection("dreams")
+      .where("isDeleted", "==", false)
+      .where("isRetired", "==", false);
+
+    if (filter === "faded") {
+      q = q.where("state", "in", ["grey", "resurrected"]).orderBy("beliefCount", "desc");
+    } else if (filter === "new") {
+      q = q.orderBy("createdAt", "desc");
+    } else if (filter === "rising") {
+      q = q.orderBy("recentBeliefs", "desc");
+    } else if (filter === "top") {
+      q = q.orderBy("beliefCount", "desc");
+    } else {
+      q = q.orderBy("beliefCount", "desc");
+    }
+
+    log(`[GET /api/dreams] filter=${filter}, limit=${safeLimit}`);
+
+    const snap = await q.limit(safeLimit).get();
     res.json({ dreams: snap.docs.map(d => ({ id: d.id, ...d.data() })) });
-  } catch (e) { res.status(500).json({ error: e.message }); }
+  } catch (e) {
+    return apiError(res, "GET /api/dreams", e, "Failed to load dreams");
+  }
 });
 
 app.get("/api/dreams/top", async (req, res) => {
   try {
+    log("[GET /api/dreams/top]");
+
     const snap = await db.collection("dreams")
       .where("isDeleted", "==", false).where("isRetired", "==", false)
       .where("state", "in", ["alive", "fading", "resurrected"])
       .orderBy("beliefCount", "desc").limit(10).get();
     res.json({ dreams: snap.docs.map(d => ({ id: d.id, ...d.data() })) });
-  } catch (e) { res.status(500).json({ error: e.message }); }
+  } catch (e) {
+    return apiError(res, "GET /api/dreams/top", e, "Failed to load top dreams");
+  }
 });
 
 app.get("/api/dreams/hall", async (req, res) => {
@@ -309,12 +348,16 @@ app.get("/api/dreams/hall", async (req, res) => {
 
 app.get("/api/dreams/graveyard", async (req, res) => {
   try {
+    log("[GET /api/dreams/graveyard]");
+
     const snap = await db.collection("dreams")
       .where("isDeleted", "==", false)
       .where("state", "in", ["grey", "resurrected"])
       .orderBy("updatedAt", "desc").limit(50).get();
     res.json({ dreams: snap.docs.map(d => ({ id: d.id, ...d.data() })) });
-  } catch (e) { res.status(500).json({ error: e.message }); }
+  } catch (e) {
+    return apiError(res, "GET /api/dreams/graveyard", e, "Failed to load graveyard");
+  }
 });
 
 app.get("/api/dreams/:id", async (req, res) => {
