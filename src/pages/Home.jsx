@@ -136,7 +136,7 @@ export default function Home() {
           ) : (
             <Link to="/signup" className="btn btn-primary btn-lg">Join the Dream</Link>
           )}
-          <Link to="/arena" className="btn btn-ghost btn-lg">Watch the Arena. →</Link>
+          <Link to="/arena" className="btn btn-ghost btn-lg">Watch the Arena →</Link>
         </div>
 
         {/* Live stats block */}
