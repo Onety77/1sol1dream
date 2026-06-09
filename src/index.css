@@ -419,6 +419,12 @@ img { max-width: 100%; display: block; }
   /* push round widget above the bottom nav */
   :root { --widget-bottom: 72px; }
 
+  /* dream cards: one full-width card per row, like a social feed */
+  .dream-card-grid {
+    grid-template-columns: 1fr !important;
+    gap: 14px !important;
+  }
+
   .container, .container-wide { padding: 0 16px; }
 
   .bottom-nav {

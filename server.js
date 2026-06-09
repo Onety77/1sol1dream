@@ -839,7 +839,15 @@ async function closeRound(round) {
     // Prize pool
     const totalSOL  = await getCreatorSOLBalance();
     const prizePool = Math.max(0, totalSOL - GAS_RESERVE);
-    log(`[engine] Prize pool: ◎${prizePool.toFixed(4)}`);
+    log(`[engine] Prize pool: ◎${prizePool.toFixed(4)}, top beliefCount: ${first.beliefCount}`);
+
+    // Skip — nothing to award: pot is empty OR no one believed in anything
+    if (prizePool <= 0.001 || first.beliefCount < 1) {
+      log(`[engine] Round skipped — no SOL or no believers, pool carries to next round`);
+      await db.collection("dream_rounds").doc(round.roundId)
+        .update({ status: "complete", payoutStatus: "skipped_no_pot", closedAt: Timestamp.now() });
+      return startNewRound(round.roundNumber);
+    }
 
     // Build payout map
     const payouts = {};
