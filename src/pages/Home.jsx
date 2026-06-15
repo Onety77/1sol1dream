@@ -9,6 +9,9 @@ import PostDreamModal from '../components/dreams/PostDreamModal';
 
 const CONTRACT_ADDRESS = 'BbZFbR2KJMzQjHV9DLH5tiKZDosHtRhYG6THccbMpump';
 
+const X_URL = 'https://x.com/YOUR_X_HANDLE';
+const X_COMMUNITY_URL = 'https://x.com/i/communities/YOUR_COMMUNITY_ID';
+
 const TICKER = [
   'Someone just believed in a dream', 'A new dream was posted',
   'The pot grows with every trade', 'Sell your tokens — lose your dream publicly',
@@ -154,7 +157,28 @@ export default function Home() {
           ) : (
             <Link to="/signup" className="btn btn-primary btn-lg">Join the Dream</Link>
           )}
-          <Link to="/arena" className="btn btn-ghost btn-lg">Watch the Arena →</Link>
+
+          <Link to="/arena" className="btn btn-ghost btn-lg">
+            Watch the Arena →
+          </Link>
+
+          <a
+            href={X_URL}
+            target="_blank"
+            rel="noreferrer"
+            className="btn btn-ghost btn-lg"
+          >
+            Follow X
+          </a>
+
+          <a
+            href={X_COMMUNITY_URL}
+            target="_blank"
+            rel="noreferrer"
+            className="btn btn-ghost btn-lg"
+          >
+            Join Community
+          </a>
         </div>
 
         {/* Contract Address */}
@@ -518,9 +542,26 @@ export default function Home() {
             Get the token. Post your dream. Fight for your funding.
             The pot fills every time someone trades.
           </p>
-          <Link to="/signup" className="btn btn-primary btn-lg">
-            Start with 1 SOL →
-          </Link>
+
+          <div style={{
+            display: 'flex',
+            gap: 14,
+            justifyContent: 'center',
+            flexWrap: 'wrap',
+          }}>
+            <Link to="/signup" className="btn btn-primary btn-lg">
+              Start with 1 SOL →
+            </Link>
+
+            <a
+              href={X_COMMUNITY_URL}
+              target="_blank"
+              rel="noreferrer"
+              className="btn btn-ghost btn-lg"
+            >
+              Join X Community
+            </a>
+          </div>
         </div>
       </section>
 
