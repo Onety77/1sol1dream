@@ -9,8 +9,8 @@ import PostDreamModal from '../components/dreams/PostDreamModal';
 
 const CONTRACT_ADDRESS = 'BbZFbR2KJMzQjHV9DLH5tiKZDosHtRhYG6THccbMpump';
 
-const X_URL = 'https://x.com/YOUR_X_HANDLE';
-const X_COMMUNITY_URL = 'https://x.com/i/communities/YOUR_COMMUNITY_ID';
+const X_URL = 'https://x.com/1solandadream26';
+const X_COMMUNITY_URL = 'https://x.com/1solandadream26';
 
 const TICKER = [
   'Someone just believed in a dream', 'A new dream was posted',
