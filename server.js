@@ -379,7 +379,7 @@ app.post("/api/dreams/generate-title", auth, async (req, res) => {
     if (!dreamText?.trim()) return res.status(400).json({ error: "dreamText required" });
 
     const result = await postJSON(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${process.env.GEMINI_API}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=${process.env.GEMINI_API}`,
       {},
       {
         contents: [{
