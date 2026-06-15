@@ -7,7 +7,7 @@ import CountdownTimer from '../components/ui/CountdownTimer';
 import FeaturedDreamCard from '../components/dreams/FeaturedDreamCard';
 import PostDreamModal from '../components/dreams/PostDreamModal';
 
-const CONTRACT_ADDRESS = 'PUT_YOUR_CA_HERE';
+const CONTRACT_ADDRESS = 'BbZFbR2KJMzQjHV9DLH5tiKZDosHtRhYG6THccbMpump';
 
 const TICKER = [
   'Someone just believed in a dream', 'A new dream was posted',
