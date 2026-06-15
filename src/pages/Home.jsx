@@ -7,6 +7,8 @@ import CountdownTimer from '../components/ui/CountdownTimer';
 import FeaturedDreamCard from '../components/dreams/FeaturedDreamCard';
 import PostDreamModal from '../components/dreams/PostDreamModal';
 
+const CONTRACT_ADDRESS = 'PUT_YOUR_CA_HERE';
+
 const TICKER = [
   'Someone just believed in a dream', 'A new dream was posted',
   'The pot grows with every trade', 'Sell your tokens — lose your dream publicly',
@@ -32,6 +34,7 @@ export default function Home() {
   const [modalOpen, setModalOpen] = useState(false);
   const heroRef = useRef(null);
   const [scrollY, setScrollY] = useState(0);
+  const [copiedCA, setCopiedCA] = useState(false);
 
   useEffect(() => {
     dreamsApi.top().then(d => setTopDream(d.dreams?.[0] || null)).catch(() => {});
@@ -42,6 +45,24 @@ export default function Home() {
     window.addEventListener('scroll', fn, { passive: true });
     return () => window.removeEventListener('scroll', fn);
   }, []);
+
+  const copyCA = async () => {
+    try {
+      await navigator.clipboard.writeText(CONTRACT_ADDRESS);
+      setCopiedCA(true);
+      setTimeout(() => setCopiedCA(false), 1400);
+    } catch {
+      const el = document.createElement('textarea');
+      el.value = CONTRACT_ADDRESS;
+      document.body.appendChild(el);
+      el.select();
+      document.execCommand('copy');
+      document.body.removeChild(el);
+
+      setCopiedCA(true);
+      setTimeout(() => setCopiedCA(false), 1400);
+    }
+  };
 
   const phrases = [...TICKER, ...TICKER];
 
@@ -84,10 +105,8 @@ export default function Home() {
         <div style={{
           animation: 'fade-up 0.7s ease-out 0.1s both',
           marginBottom: 40,
-          /* subtle parallax with scroll */
           transform: `translateY(${scrollY * 0.18}px)`,
         }}>
-          {/* Giant "1" */}
           <div style={{
             fontFamily: 'var(--font-display)', fontWeight: 900,
             fontSize: 'clamp(8rem, 28vw, 22rem)',
@@ -98,7 +117,6 @@ export default function Home() {
             userSelect: 'none',
           }}>1</div>
 
-          {/* SOL & A DREAM */}
           <div style={{
             fontFamily: 'var(--font-display)', fontWeight: 900,
             fontSize: 'clamp(1.4rem, 5vw, 4rem)',
@@ -127,7 +145,7 @@ export default function Home() {
         <div style={{
           display: 'flex', gap: 14, justifyContent: 'center', flexWrap: 'wrap',
           animation: 'fade-up 0.7s ease-out 0.3s both',
-          marginBottom: 52,
+          marginBottom: 26,
         }}>
           {user ? (
             <button onClick={() => setModalOpen(true)} className="btn btn-primary btn-lg">
@@ -139,13 +157,100 @@ export default function Home() {
           <Link to="/arena" className="btn btn-ghost btn-lg">Watch the Arena →</Link>
         </div>
 
+        {/* Contract Address */}
+        <div
+          style={{
+            animation: 'fade-up 0.7s ease-out 0.35s both',
+            marginBottom: currentRound ? 28 : 52,
+            width: '100%',
+            maxWidth: 560,
+          }}
+        >
+          <button
+            onClick={copyCA}
+            type="button"
+            style={{
+              width: '100%',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              gap: 14,
+              padding: '12px 14px 12px 18px',
+              background: 'rgba(255,255,255,0.035)',
+              border: '1px solid rgba(255,255,255,0.09)',
+              borderRadius: 'var(--r-lg)',
+              color: 'var(--text)',
+              cursor: 'pointer',
+              backdropFilter: 'blur(18px)',
+              transition: 'border-color 0.2s, background 0.2s, transform 0.2s',
+            }}
+            onMouseEnter={e => {
+              e.currentTarget.style.borderColor = 'rgba(0,255,209,0.25)';
+              e.currentTarget.style.background = 'rgba(0,255,209,0.045)';
+              e.currentTarget.style.transform = 'translateY(-2px)';
+            }}
+            onMouseLeave={e => {
+              e.currentTarget.style.borderColor = 'rgba(255,255,255,0.09)';
+              e.currentTarget.style.background = 'rgba(255,255,255,0.035)';
+              e.currentTarget.style.transform = '';
+            }}
+          >
+            <div style={{ minWidth: 0, textAlign: 'left' }}>
+              <p
+                style={{
+                  fontFamily: 'var(--font-mono)',
+                  fontSize: '0.56rem',
+                  letterSpacing: '0.18em',
+                  color: 'var(--text-3)',
+                  textTransform: 'uppercase',
+                  marginBottom: 6,
+                }}
+              >
+                Contract Address
+              </p>
+
+              <p
+                style={{
+                  fontFamily: 'var(--font-mono)',
+                  fontSize: 'clamp(0.68rem, 1.8vw, 0.82rem)',
+                  color: 'var(--text-2)',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                {CONTRACT_ADDRESS}
+              </p>
+            </div>
+
+            <span
+              style={{
+                flexShrink: 0,
+                fontFamily: 'var(--font-mono)',
+                fontSize: '0.64rem',
+                letterSpacing: '0.08em',
+                color: copiedCA ? 'var(--alive)' : 'var(--gold)',
+                padding: '8px 12px',
+                borderRadius: 'var(--r-full)',
+                background: copiedCA
+                  ? 'rgba(0,255,209,0.08)'
+                  : 'rgba(255,215,0,0.08)',
+                border: copiedCA
+                  ? '1px solid rgba(0,255,209,0.2)'
+                  : '1px solid rgba(255,215,0,0.18)',
+              }}
+            >
+              {copiedCA ? 'COPIED' : 'COPY'}
+            </span>
+          </button>
+        </div>
+
         {/* Live stats block */}
         {currentRound && (
           <div style={{
             display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16,
             animation: 'fade-up 0.7s ease-out 0.4s both',
           }}>
-            {/* Pot + timer pill */}
             <div style={{
               display: 'flex', flexWrap: 'wrap', gap: 0, justifyContent: 'center',
               background: 'rgba(255,255,255,0.04)',
@@ -170,7 +275,6 @@ export default function Home() {
               </div>
             </div>
 
-            {/* Round label */}
             <p style={{
               fontFamily: 'var(--font-mono)', fontSize: '0.58rem',
               letterSpacing: '0.18em', color: 'var(--text-3)',
@@ -207,9 +311,7 @@ export default function Home() {
         </div>
       </div>
 
-      {/* ═══════════════════════════════════════════
-          CURRENTLY LEADING — the top dream
-      ═══════════════════════════════════════════════ */}
+      {/* Currently Leading */}
       <section style={{ padding: 'clamp(64px, 8vw, 100px) 0' }}>
         <div className="container" style={{ maxWidth: 860 }}>
           <div style={{ textAlign: 'center', marginBottom: 36 }}>
@@ -244,15 +346,12 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ═══════════════════════════════════════════
-          HOW IT WORKS — editorial zigzag
-      ═══════════════════════════════════════════════ */}
+      {/* How It Works */}
       <section style={{
         padding: 'clamp(64px, 8vw, 100px) 0',
         borderTop: '1px solid rgba(255,255,255,0.05)',
         position: 'relative', overflow: 'hidden',
       }}>
-        {/* big background text */}
         <div style={{
           position: 'absolute', top: '50%', left: '50%',
           transform: 'translate(-50%, -50%)',
@@ -282,7 +381,6 @@ export default function Home() {
                 borderBottom: i < 5 ? '1px solid rgba(255,255,255,0.04)' : 'none',
                 animation: `fade-up 0.5s ease-out ${i * 0.08}s both`,
               }}>
-                {/* Number + Icon block */}
                 <div style={{
                   flexShrink: 0, width: 'clamp(64px, 12vw, 140px)',
                   textAlign: 'center', position: 'relative',
@@ -300,7 +398,6 @@ export default function Home() {
                   }}>{icon}</div>
                 </div>
 
-                {/* Content */}
                 <div style={{ flex: 1, textAlign: i % 2 === 0 ? 'left' : 'right' }}>
                   <h3 style={{
                     fontFamily: 'var(--font-display)', fontWeight: 800,
@@ -321,9 +418,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ═══════════════════════════════════════════
-          THE SPLIT — make the numbers the design
-      ═══════════════════════════════════════════════ */}
+      {/* The Split */}
       <section style={{
         padding: 'clamp(64px, 8vw, 100px) 0',
         borderTop: '1px solid rgba(255,255,255,0.05)',
@@ -340,13 +435,12 @@ export default function Home() {
             </p>
           </div>
 
-          {/* Four massive percentage blocks */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: 'clamp(8px, 2vw, 20px)' }}>
             {[
-              { pct: '50', label: '1st Place\nDream',    color: '#FFD700', glow: 'rgba(255,215,0,0.35)' },
-              { pct: '10', label: '2nd Place\nDream',    color: '#C8C8E0', glow: 'rgba(200,200,224,0.2)' },
-              { pct: '10', label: '3rd Place\nDream',    color: '#CD7F32', glow: 'rgba(205,127,50,0.25)' },
-              { pct: '30', label: 'Believers\nof #1',    color: '#00FFD1', glow: 'rgba(0,255,209,0.3)' },
+              { pct: '50', label: '1st Place\nDream', color: '#FFD700', glow: 'rgba(255,215,0,0.35)' },
+              { pct: '10', label: '2nd Place\nDream', color: '#C8C8E0', glow: 'rgba(200,200,224,0.2)' },
+              { pct: '10', label: '3rd Place\nDream', color: '#CD7F32', glow: 'rgba(205,127,50,0.25)' },
+              { pct: '30', label: 'Believers\nof #1', color: '#00FFD1', glow: 'rgba(0,255,209,0.3)' },
             ].map(({ pct, label, color, glow }, i) => (
               <div key={pct + i} style={{
                 padding: 'clamp(16px, 3vw, 28px) 12px',
@@ -394,16 +488,13 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ═══════════════════════════════════════════
-          CTA SECTION
-      ═══════════════════════════════════════════════ */}
+      {/* CTA Section */}
       <section style={{
         padding: 'clamp(80px, 10vw, 140px) 24px',
         textAlign: 'center',
         borderTop: '1px solid rgba(255,255,255,0.05)',
         position: 'relative', overflow: 'hidden',
       }}>
-        {/* Big glow behind */}
         <div style={{
           position: 'absolute', bottom: -100, left: '50%', transform: 'translateX(-50%)',
           width: 600, height: 300, borderRadius: '50%',
